@@ -18,5 +18,4 @@ open BooleanFun.BV
 -- BLR linearity testing
 #check almost_character
 
--- Arrow's theorem
 #check dictator_of_condorcet_and_unanimous

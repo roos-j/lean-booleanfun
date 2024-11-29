@@ -17,7 +17,7 @@ variable {s : Finset ι} {f : ι → N}
 -- theorem prod_eq_one_iff_of_one_le' :
 --     (∀ i ∈ s, 1 ≤ f i) → ((∏ i ∈ s, f i) = 1 ↔ ∀ i ∈ s, f i = 1) :=
 --   fun h ↦ ⟨by
---     convert Multiset.all_one_of_le_one_le_of_prod_eq_one (s:=s.1.map f) (by convert h; simp only [Multiset.mem_map,
+--     convert Multiset.all_one_of_le_one_le_of_prod_eq_one (s := s.1.map f) (by convert h; simp only [Multiset.mem_map,
 --       mem_val, forall_exists_index, and_imp, forall_apply_eq_imp_iff₂])
 --     simp only [Multiset.mem_map, mem_val, forall_exists_index, and_imp, forall_apply_eq_imp_iff₂],
 --     prod_eq_one⟩
