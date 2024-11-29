@@ -134,12 +134,12 @@ lemma _triple_sum_oneOn_consistent_eq:
   unfold VoteConsistent
   simp_rw [←oneOn_prod]
   conv => enter [1, 2, x, 2, y]
-          rw [sum_tuple_prod_distrib (f:=λ i↦λc↦oneOn (NAE3 (x i) (y i) c))]
+          rw [←Fintype.prod_sum (f:=λ i↦λc↦oneOn (NAE3 (x i) (y i) c))]
   -- = ∑ x, ∏ i, ∑ b, ∑ c, oneOn (NAE3 (x i) b c)
   conv => enter [1, 2, x]
-          rw [sum_tuple_prod_distrib (f:=λ i↦λb↦∑ c, oneOn (NAE3 (x i) b c))]
+          rw [←Fintype.prod_sum (f:=λ i↦λb↦∑ c, oneOn (NAE3 (x i) b c))]
   -- = ∏ i, ∑ a, ∑ b, ∑ c, oneOn (NAE3 a b c)
-  rw [sum_tuple_prod_distrib (f:=λ _↦λa↦∑ b, ∑ c, oneOn (NAE3 a b c))]
+  rw [←Fintype.prod_sum (f:=λ _↦λa↦∑ b, ∑ c, oneOn (NAE3 a b c))]
   -- = 6^n
   norm_num
 
@@ -199,7 +199,7 @@ lemma _eq_noise_operator: T = @noise_operator n (-1/3) := by
     unfold VoteConsistent
     simp_rw [←oneOn_prod]
     -- = ∏ i, ∑ v:Fin 2, oneOn (NAE3 (x i) (y i) v)
-    rw [sum_tuple_prod_distrib (f:=λi=>λv=>oneOn (NAE3 (x i) (y i) v))]
+    rw [←Fintype.prod_sum (f:=λi=>λv=>oneOn (NAE3 (x i) (y i) v))]
     suffices ∀ i, ∑ v : Fin 2, oneOn (NAE3 (x i) (y i) v) = (1+oneOn (x i≠y i)) by simp_rw [this]
     -- for each i, two cases: x i = y i or x i ≠ y i
     intro i
@@ -215,7 +215,7 @@ lemma _eq_noise_operator: T = @noise_operator n (-1/3) := by
   -- = ∑ y : Fin n → Fin 2, ∏ i, (-1)^(oneOn (i∈ S)*(y i))*(1+oneOn (x i≠y i))
   conv => enter [1,2,2,y]; rw [prod_filter, ←prod_mul_distrib]
   -- = ∏ i, ∑ v:Fin 2,  (-1)^(oneOn (i∈ S)*v)*(1+oneOn (x i≠v))
-  rw [sum_tuple_prod_distrib (f:=λ i=>λ v=>(if i∈S then (-1)^v.val else 1) * (1 + oneOn (x i ≠ v)))]
+  rw [←Fintype.prod_sum (f:=λ i=>λ v=>(if i∈S then (-1)^v.val else 1) * (1 + oneOn (x i ≠ v)))]
   -- = ∏ i, (-1)^(oneOn (i∈ S)*(x i)) + (-1)^(oneOn (i∈ S)*(1-x i))*2
   have haux (w:Fin 2) (g:Fin 2→ℝ): ∑ v:Fin 2, g v = g w + g (1-w) := by
     induction w using Fin.cases with -- TODO: tactic macro?

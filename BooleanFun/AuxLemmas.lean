@@ -122,65 +122,6 @@ lemma oneOn_prod {p:ι→Prop}: ∏ i, oneOn (p i) = oneOn (∀ i, p i) := by
 
 end OneOn
 
-section SumProd
-
--- local instance: Unique (Fin 0→α) := uniqueOfIsEmpty _
--- local instance: Nonempty (Fin 0→α) := instNonemptyOfInhabited
--- local instance: Nonempty (Fin (n+1)) := instNonemptyOfInhabited
--- set_option trace.Meta.synthInstance true in
-lemma sum_tuple_prod_distrib {n:ℕ} {f:Fin n→α→β} [Fintype α] [DecidableEq α] [CommRing β]:
-    ∑ x:Fin n→α, ∏ i:Fin n, f i (x i) = ∏ i, ∑ v:α, f i v := by
-  induction n with
-  | zero => simp only [univ_unique, univ_eq_empty, prod_empty, sum_const, card_singleton, one_smul]
-  | succ n ih =>
-    -- ∑ x:Fin (n+1)→α, ∏ i:(Fin n+1), f i (x i) = ∑ v, ∑ x∈{x n=v}, ∏ i:, f i (x i)
-    rw [←sum_fiberwise (g:=λ x => x (Fin.last n))]
-    -- = ∑ v, ∑ x∈{x n=v}, (∏ i':Fin n, f i (x i))*f n (x n)
-    conv => enter [1, 2, v, 2, x]; rw [Fin.prod_univ_castSucc]
-    -- = ∑ v, ∑ x, if x n=v then (∏ i':Fin n, f i (x i))*f n (v) else 0
-    conv => enter [1, 2, v]; rw [sum_filter]; enter [2, x];
-            tactic => have h: x (Fin.last n) = v → (∏ i : Fin n, f i.castSucc (x i.castSucc)) * f (Fin.last n) (x (Fin.last n)) =
-                (∏ i : Fin n, f i.castSucc (x i.castSucc)) * f (Fin.last n) (v) := by intro hx; rw [hx]
-            rw [rw_ite_left (h:=h)]
-    -- = ∑ v, f n (v)*∑ x∈{x n=v}, (∏ i':Fin n, f i' (x i'))
-    simp_rw [←sum_filter, ←sum_mul, mul_comm]
-    -- = ∑ v, f n (v)*∑ x':Fin n→Fin 2, (∏ i':Fin n, f i' (x' i'))
-    have (v:α): ∑ x∈filter (λ x=>x (Fin.last n)=v) (@univ (Fin (n+1)→α) _), ∏ i' : Fin n, f i'.castSucc (x i'.castSucc)
-        = ∑ x':Fin n→α, ∏ i' : Fin n, f i' (x' i') := by
-      apply Finset.sum_of_injOn (e:=λ x => Fin.init x)
-      · intro x₁ hx₁ x₂ hx₂ -- injective
-        dsimp
-        intro hx₁x₂
-        simp at hx₁ hx₂
-        funext i
-        induction i using Fin.lastCases with
-        | last => rw [hx₁,hx₂]
-        | cast i' => exact funext_iff.mp hx₁x₂ i'
-      · intro x₁ _ -- maps to
-        rw [coe_univ]
-        exact Set.mem_univ _
-      · intro x' _ -- (basically surjective)
-        intro hx'
-        simp at hx'
-        suffices h : ¬∀ x:Fin (n+1)→α, x (Fin.last n)=v→¬Fin.init x=x' by
-          contradiction
-        push_neg
-        use Fin.snoc x' v
-        simp
-      · intro x _ -- summands equal
-        apply prod_congr (by rfl)
-        intro i _
-        simp
-        rfl
-    simp_rw [this, ih]
-    -- conv => enter [1,2,v]; rw [this, ih]
-    rw [←sum_mul, mul_comm]
-    simp_rw [Fin.coe_eq_castSucc]
-    -- conv => enter [1,1,2,i]; rw [Fin.coe_eq_castSucc]
-    rw [←Fin.prod_univ_castSucc (f:=λ i=>∑ v, f i v)]
-
-end SumProd
-
 section PowStuff
 
 /-- natural number version of `zpow_sub₀` -/
