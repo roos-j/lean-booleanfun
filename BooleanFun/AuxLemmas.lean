@@ -179,16 +179,6 @@ lemma sum_tuple_prod_distrib {n:ℕ} {f:Fin n→α→β} [Fintype α] [Decidable
     -- conv => enter [1,1,2,i]; rw [Fin.coe_eq_castSucc]
     rw [←Fin.prod_univ_castSucc (f:=λ i=>∑ v, f i v)]
 
-lemma eq_zero_of_nonneg_and_sum_eq_zero {f:α→ℝ}
-    (h1: ∀x∈s, 0≤f x) (h2: ∑ x∈s, f x = 0): ∀ x∈s, f x = 0 := by
-  by_contra h
-  simp at h
-  obtain ⟨x0,hx0,hx1⟩ := h
-  have : 0 < f x0:= lt_of_le_of_ne (h1 x0 hx0) (by symm; assumption)
-  have := sum_pos' h1 (by use x0)
-  have := ne_of_lt this
-  tauto
-
 end SumProd
 
 section FinsetFilter

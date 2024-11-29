@@ -4,9 +4,11 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Joris Roos
 -/
 import BooleanFun.AuxLemmas
+import BooleanFun.ToMathlib.Finset
 
 import Mathlib.Analysis.InnerProductSpace.PiL2
 import Mathlib.Algebra.CharP.Pi
+
 --set_option profiler true
 
 /-!
@@ -678,7 +680,7 @@ lemma fourier_eq_zero_iff_fourier_weight_eq {k:ℕ} {f:BooleanFunc n}:
           _ = ∑ S∈{S | S.card = k}, |𝓕 f S|^2 + ∑ S∈{S | S.card ≠ k}, |𝓕 f S|^2
                 - fourierWeight k f                       := by rw [sum_filter_add_sum_filter_not]
           _ = ∑ S∈{S | S.card ≠ k}, |𝓕 f S|^2             := by rw [add_comm, add_sub_assoc, sub_self, add_zero]
-    have := eq_zero_of_nonneg_and_sum_eq_zero (by intro S _; apply pow_two_nonneg) this
+    have := all_zero_of_le_zero_le_of_sum_eq_zero (by intro S _; apply pow_two_nonneg) this
     specialize this S (by simp [hS])
     rw [sq_abs, pow_eq_zero_iff (by trivial)] at this
     assumption
