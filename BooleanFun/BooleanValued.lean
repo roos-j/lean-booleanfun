@@ -23,7 +23,7 @@ noncomputable section
 
 namespace BooleanFun
 
-open BooleanFun Finset Function Fin
+open BooleanFun Finset Function Fin RealInnerProductSpace
 
 variable {n : ℕ} {f g : BooleanFunc n} {x : Fin n → Fin 2}
 
@@ -41,8 +41,7 @@ lemma norm_sq_eq_one:
     ‖f‖^2 = 1 := by
   unfold norm instNormBooleanFunc InnerProductSpace.Core.toNorm
   dsimp
-  rw [inner_eq_inner_product]
-  unfold inner_product
+  change √(𝐄 _)^2 = 1
   conv in f * f =>
     ext x
     dsimp
@@ -186,9 +185,9 @@ lemma eq_character_of_eq_sum_degree_one (hn : n>0) (hf : ∀ x, f x = ∑ i, �
       have : ∀ i, 𝓕 g {i} = 𝓕 f {i₀.succAbove i} := by
         intro i
         calc
-          _ = ⟨χ {i}, g⟩       := by rfl
-          _ = ⟨χ {i}, ∑ i, 𝓕 f {i₀.succAbove i}•χ {i}⟩ := by rw [hgeq]
-          _ = ∑ i', 𝓕 f {i₀.succAbove i'} * ⟨χ {i}, χ {i'}⟩ := by
+          _ = ⟪χ {i}, g⟫       := by rfl
+          _ = ⟪χ {i}, ∑ i, 𝓕 f {i₀.succAbove i}•χ {i}⟫ := by rw [hgeq]
+          _ = ∑ i', 𝓕 f {i₀.succAbove i'} * ⟪χ {i}, χ {i'}⟫ := by
             rw [inner_sum]; conv => enter[1, 2, i']; rw [inner_smul_right]
           _ = 𝓕 f {i₀.succAbove i}                     := by
             (conv => enter [1, 2, i']; rw [walsh_inner_eq]); simp
@@ -267,7 +266,7 @@ lemma distance_eq : distance f g = 𝐄 (fun x ↦ (1/2) * (1-(f x) * (g x))) :=
   unfold distance
   simp_rw [oneOn_ne_of_one_or_neg_one (hbv.one_or_neg_one _) (hbvg.one_or_neg_one _)]
 
-lemma inner_eq_distance : ⟨f, g⟩ = 1-2 * distance f g := by
+lemma inner_eq_distance : ⟪f, g⟫ = 1-2 * distance f g := by
   rw [distance_eq]
   unfold expectation
   dsimp
@@ -339,7 +338,7 @@ theorem almost_character {ε : ℝ} (h : acceptanceProbabilityBLR f≥1-ε):
       _ ≤ ∑ S, (𝓕 f S₀) * (𝓕 f S)^2 := by gcongr; exact hS₀ _
       _ ≤ (𝓕 f S₀) * ∑ S, |𝓕 f S|^2 := by simp_rw [sq_abs]; rw [mul_sum]
       _ = 𝓕 f S₀                  := by rw [fourier_eq_one, mul_one]
-      _ = ⟨f, χ S₀⟩                := by rw [fourier_eq_inner, inner_comm]
+      _ = ⟪f, χ S₀⟫                := by rw [fourier_eq_inner, real_inner_comm]
       _ = _                        := inner_eq_distance
   use S₀
   linarith

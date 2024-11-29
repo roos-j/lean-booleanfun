@@ -40,7 +40,7 @@ noncomputable section
 
 namespace BooleanFun.BV
 
-open Classical Mathlib Finset Pi
+open Classical Mathlib Finset Pi RealInnerProductSpace
 
 variable {α : Type*} {ι : Type*}
 variable {n : ℕ}
@@ -222,7 +222,7 @@ lemma _eq_noise_operator : T = @noise_operator n (-1/3) := by
     | zero => simp
     | succ k => simp [Fin.fin_one_eq_zero k]; exact add_comm _ _
   conv => enter [1, 2, 2, i]; rw [haux (x i), oneOn_false (by simp)]
-          rw [oneOn_true (by decreasing_trivial), add_zero, mul_one]
+          rw [oneOn_true (by omega), add_zero, mul_one]
   -- = ∏ i ∈ S, ((-1)^(x i) + 2 * (-1)^(1-x i)) * ∏ i∉S, ..
   rw [← prod_filter_mul_prod_filter_not (p := fun i ↦ i ∈ S), prod_filter, prod_filter]
   -- first product equals (-1)^S.card * ∏ i ∈ S, (-1)^(x i) = (-1)^S.card * χ S x
@@ -271,8 +271,8 @@ theorem probabilityCondorcetWinner_eq:
           sum_boole, AddHom.coe_mk, isUnit_iff_ne_zero, ne_eq, pow_eq_zero_iff', OfNat.ofNat_ne_zero,
           false_and, not_false_eq_true, IsUnit.mul_inv_cancel_right]
       _ = 6^n * (1/2)^n * ∑ x, f x * T f x := by congr; rw [← mul_pow]; congr; norm_num
-      _ = 6^n * ⟨f, T f⟩ := by rw [mul_assoc]; rfl
-      _ = 6^n * ⟨f, noise_operator (-1/3) f⟩ := by rw [_eq_noise_operator]
+      _ = 6^n * ⟪f, T f⟫ := by rw [mul_assoc]; rfl
+      _ = 6^n * ⟪f, noise_operator (-1/3) f⟫ := by rw [_eq_noise_operator]
   rw [this]
   field_simp -- todo : speedup
   ring

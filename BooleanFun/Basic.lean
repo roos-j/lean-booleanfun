@@ -55,6 +55,8 @@ namespace BooleanFun
 noncomputable section
 
 open Real BigOperators Function Finset Pi
+open RealInnerProductSpace
+
 
 /-- A Boolean function maps an `n`-tuple of bits (of type `Fin n → Fin 2`) to a real number. -/
 abbrev BooleanFunc (n : ℕ) : Type := (Fin n → Fin 2) → ℝ
@@ -116,7 +118,7 @@ lemma walsh_eq_neg_one_pow_sum : χ S x = (-1)^∑ i ∈ S, (x i).val := prod_po
 /-- Walsh characters are characters. -/
 lemma walsh_add : χ S (x + y) = (χ S x) * (χ S y) := by
   rw [← prod_mul_distrib, prod_congr (by rfl)]
-  have : ∀ v : Fin 2, v = 0 ∨ v = 1 := by decreasing_trivial
+  have : ∀ v : Fin 2, v = 0 ∨ v = 1 := by omega
   intro i _
   dsimp
   obtain ⟨hx|hx, hy|hy⟩ := And.intro (this (x i)) (this (y i))
@@ -152,38 +154,31 @@ theorem expectation_eq_fourier : 𝐄 f = 𝓕 f ∅ := by
       AddHom.coe_mk, Pi.mul_apply, prod_empty, one_mul]
 
 /-- The inner product of two Boolean functions is the expectation of their pointwise product. -/
---use bilinear map API?
-abbrev inner_product {n : ℕ} (f g : BooleanFunc n) : ℝ := 𝐄 (f * g)
 
-@[scoped simp]
-theorem inner_prod_self_nn : inner_product f f ≥ 0 := by
+theorem expectation_prod_self_nonneg : 𝐄 (f * f) ≥ 0 := by
   apply mul_nonneg
-  norm_num
-  apply sum_nonneg
-  intros x _
-  apply mul_self_nonneg
+  · norm_num
+  · apply sum_nonneg
+    intros x _
+    apply mul_self_nonneg
 
 /-- Boolean functions form an inner product space. -/
-instance instInnerProductSpaceCoreBooleanFunc : InnerProductSpace.Core ℝ (BooleanFunc n) := {
-  inner := inner_product
+instance : InnerProductSpace.Core ℝ (BooleanFunc n) := {
+  inner := fun f g ↦ 𝐄 (f * g)
   conj_symm := by
     intros f g
     simp only [conj_trivial]
-    unfold inner_product
     rw [mul_comm]
   nonneg_re := by
     intro f
-    simp only [RCLike.re_to_real, inner_prod_self_nn]
-  add_left := by
-    unfold inner_product
-    simp only [add_mul, map_add, implies_true]
+    simp only [RCLike.re_to_real, expectation_prod_self_nonneg]
+  add_left := by simp only [add_mul, map_add, implies_true]
   smul_left := by
-    unfold inner_product
     simp only [Algebra.smul_mul_assoc, map_smul, smul_eq_mul, conj_trivial, implies_true]
   definite := by
     intro f
     dsimp
-    unfold inner_product expectation
+    unfold expectation
     simp only [one_div, inv_pow, LinearMap.coe_mk, AddHom.coe_mk, Pi.mul_apply, mul_eq_zero,
       inv_eq_zero, pow_eq_zero_iff', OfNat.ofNat_ne_zero, ne_eq, false_and, false_or]
     intro hf
@@ -198,31 +193,20 @@ instance instInnerProductSpaceCoreBooleanFunc : InnerProductSpace.Core ℝ (Bool
     exact mul_self_eq_zero.1 this
 }
 
-instance instNormedAddCommGroupBooleanFunc : NormedAddCommGroup (BooleanFunc n) :=
-  instInnerProductSpaceCoreBooleanFunc.toNormedAddCommGroup
+instance : NormedAddCommGroup (BooleanFunc n) :=
+  instCoreRealBooleanFunc.toNormedAddCommGroup
 
 instance : SeminormedAddCommGroup (BooleanFunc n) :=
   instNormedAddCommGroupBooleanFunc.toSeminormedAddCommGroup
 
-instance instInnerProductSpaceBooleanFunc : InnerProductSpace ℝ (BooleanFunc n) :=
-  InnerProductSpace.ofCore instInnerProductSpaceCoreBooleanFunc
-
-/-- Inner product of Boolean functions -/
-scoped notation "⟨" f ", " g "⟩" => inner (𝕜 := ℝ) f g
-
-
-@[scoped simp]
-lemma inner_eq_inner_product : ⟨f, g⟩ = inner_product f g := by rfl
+instance : InnerProductSpace ℝ (BooleanFunc n) :=
+  InnerProductSpace.ofCore instCoreRealBooleanFunc
 
 instance : Norm (BooleanFunc n) := InnerProductSpace.Core.toNorm (𝕜 := ℝ) (F := BooleanFunc n)
 
-lemma inner_comm : ⟨f, g⟩ = ⟨g, f⟩ := by simp; unfold inner_product; simp_rw [mul_comm]
-
 /-- Cauchy-Schwarz inequality on Boolean functions -/
-theorem cauchy_schwarz : |⟨f, g⟩| ≤ ‖f‖ * ‖g‖ := by
-  have h := InnerProductSpace.Core.norm_inner_le_norm (𝕜 := ℝ) (F := BooleanFunc n) f g
-  simp at h
-  exact h
+theorem cauchy_schwarz : |⟪f, g⟫| ≤ ‖f‖ * ‖g‖ :=
+  InnerProductSpace.Core.norm_inner_le_norm (𝕜 := ℝ) (F := BooleanFunc n) f g
 
 lemma walsh_sq_eq_one : (χ S)^2 = 1 := by
   funext x
@@ -240,19 +224,20 @@ lemma expectation_one : @expectation n 1 = 1 := by
     mul_one, isUnit_iff_ne_zero, ne_eq, pow_eq_zero_iff', OfNat.ofNat_ne_zero, false_and,
     not_false_eq_true, IsUnit.inv_mul_cancel]
 
-lemma norm_sq_eq_inner : ‖f‖^2 = ⟨f, f⟩ := by
-  rw [← RCLike.re_to_real (x := ⟨f, f⟩), ← InnerProductSpace.norm_sq_eq_inner]
+lemma norm_sq_eq_inner : ‖f‖^2 = ⟪f, f⟫ := by
+  rw [← RCLike.re_to_real (x := ⟪f, f⟫), ← InnerProductSpace.norm_sq_eq_inner]
 
 /-- Walsh characters are L² normalized. -/
 @[scoped simp]
 theorem walsh_norm_one (S : Finset (Fin n)) : ‖χ S‖ = 1 := by
   rw [norm_eq_sqrt_inner (𝕜 := ℝ)]
-  simp only [sqrt_eq_one, inner_eq_inner_product, inner_product]
+  simp only [sqrt_eq_one]
+  change 𝐄 _ = 1
   rw [← pow_two, walsh_sq_eq_one]
   simp
 
 @[scoped simp]
-theorem walsh_inner_self_eq_one : ⟨χ S, χ S⟩ = 1 := by
+theorem walsh_inner_self_eq_one : ⟪χ S, χ S⟫ = 1 := by
   rw [← norm_sq_eq_inner, walsh_norm_one, one_pow]
 
 theorem walsh_mul_eq : χ S * χ S' = χ (symmDiff S S') := by
@@ -276,9 +261,9 @@ theorem walsh_mul_eq : χ S * χ S' = χ (symmDiff S S') := by
   rw [h] at ha
   contradiction
 
-lemma inner_eq_expectation : ⟨f, g⟩ = 𝐄 (f * g) := by rfl
+lemma inner_eq_expectation : ⟪f, g⟫ = 𝐄 (f * g) := by rfl
 
-lemma fourier_eq_inner : 𝓕 f S = ⟨χ S, f⟩ := by rfl
+lemma fourier_eq_inner : 𝓕 f S = ⟪χ S, f⟫ := by rfl
 
 /-- Flip the `i₀`th bit of `x`. -/
 def flipAt (i₀ : Fin n) (x : Fin n → Fin 2) : Fin n→ Fin 2 := fun i ↦ if i = i₀ then 1-x i else x i
@@ -358,9 +343,8 @@ theorem expectation_walsh_eq_zero (hS : S.Nonempty) : 𝐄 (χ S) = 0 := by
   rw [Fin.eq_one_of_neq_zero _ h3] at h1
   contradiction
 
-theorem walsh_orthogonal (S S' : Finset (Fin n)) (h : S ≠ S') : ⟨χ S, χ S'⟩ = 0 := by
-  simp
-  unfold inner_product
+theorem walsh_orthogonal (S S' : Finset (Fin n)) (h : S ≠ S') : ⟪χ S, χ S'⟫ = 0 := by
+  change 𝐄 _ = 0
   simp [walsh_mul_eq]
   apply expectation_walsh_eq_zero
   by_contra h1
@@ -368,7 +352,7 @@ theorem walsh_orthogonal (S S' : Finset (Fin n)) (h : S ≠ S') : ⟨χ S, χ S'
   contradiction
 
 @[scoped simp]
-theorem walsh_inner_eq : ⟨χ S, χ S'⟩ = oneOn (S = S') := by
+theorem walsh_inner_eq : ⟪χ S, χ S'⟫ = oneOn (S = S') := by
   unfold oneOn
   split_ifs with h
   rw [← h]
@@ -390,23 +374,17 @@ abbrev walsh_orthonormal_basis : OrthonormalBasis (ι := Finset (Fin n)) ℝ (Bo
 --     Basis.toOrthonormalBasis walsh_basis walsh_orthonormal
 /-- Walsh-Fourier expansion : Every Boolean function is equal to a linear combination of Walsh characters. -/
 theorem walsh_fourier (f : BooleanFunc n) : f = ∑ S : Finset (Fin n), (𝓕 f S)•χ S := by
-  have h := OrthonormalBasis.sum_repr' walsh_orthonormal_basis f
-  nth_rewrite 1 [← h]
-  apply sum_congr (by rfl)
-  intro x _
-  unfold fourierTransform
-  simp
+  convert (OrthonormalBasis.sum_repr' walsh_orthonormal_basis f).symm <;> simp; rfl
 
 lemma fourier_walsh : 𝓕 (χ S) S' = oneOn (S' = S) := by
   calc
-    _ = ⟨χ S', χ S⟩     := by rfl
+    _ = ⟪χ S', χ S⟫     := rfl
     _ = oneOn (S' = S) := walsh_inner_eq
 
 /-- Plancherel/Parseval theorem for Boolean functions. -/
-theorem inner_eq_sum_fourier : ⟨f, g⟩ = ∑ S : Finset (Fin n), (𝓕 f S) * (𝓕 g S) := by
-  nth_rewrite 1 [walsh_fourier f]
-  nth_rewrite 1 [walsh_fourier g]
-  exact OrthogonalFamily.inner_sum (Orthonormal.orthogonalFamily walsh_orthonormal) _ _ _
+theorem inner_eq_sum_fourier : ⟪f, g⟫ = ∑ S : Finset (Fin n), (𝓕 f S) * (𝓕 g S) := by
+  convert OrthogonalFamily.inner_sum (Orthonormal.orthogonalFamily walsh_orthonormal) _ _ _
+    <;> exact walsh_fourier _
 
 /-- Plancherel/Parseval theorem for Boolean functions. -/
 theorem walsh_plancherel : ‖f‖^2 = ∑ S : Finset (Fin n), |𝓕 f S|^2 := by
@@ -479,16 +457,8 @@ theorem dderiv_eq_sum_fourier (i : Fin n) (f : BooleanFunc n) : dderiv i f = ∑
 /-- The `i`th coordinate Laplacian operator as in Def. 2.25 [odonnell2014].  -/
 def laplace (i : Fin n) : BooleanFunc n →ₗ[ℝ] BooleanFunc n := {
   toFun := fun f ↦ fun x ↦ (f (x) - f (flipAt i x))/2
-  map_add' := by
-    intro f g
-    funext x
-    simp only [Pi.add_apply]
-    ring
-  map_smul' := by
-    intro c f
-    funext x
-    simp
-    ring
+  map_add' := by intro f g; funext x; simp only [Pi.add_apply]; ring
+  map_smul' := by intro c f; funext x; simp; ring
 }
 
 lemma setAt_eq_id (h : x i = v) : setAt i v x = x := by
@@ -502,7 +472,7 @@ lemma setAt_eq_flipAt (h : x i ≠ v) : setAt i v x = flipAt i x := by
   funext j
   unfold setAt flipAt
   split_ifs with hj
-  · rw [hj]; decreasing_trivial
+  · rw [hj]; omega
   · rfl
 
 lemma laplace_eq_dderiv (i : Fin n) (f : BooleanFunc n) (x : Fin n → Fin 2):
@@ -622,11 +592,7 @@ theorem covariance_eq_sum_fourier (f g : BooleanFunc n) : covariance f g = ∑ S
   · exact mem_univ ∅
 
 theorem variance_eq_sum_fourier (f : BooleanFunc n) : variance f = ∑ S ∈ {S : Finset (Fin n) | S.Nonempty}, (𝓕 f S)^2 := by
-  have := covariance_eq_sum_fourier f f
-  conv =>
-    enter [2, 2, S]
-    rw [pow_two]
-  assumption
+  convert covariance_eq_sum_fourier f f; exact pow_two _
 
 /-- L² Poincaré inequality : variance of a Boolean function is ≤ total Influence.
 See [odonnell2014], Sec. 2.3. -/
@@ -748,7 +714,7 @@ lemma multiplier_walsh {m : ℕ → ℝ} {S : Finset (Fin n)} : multiplier m (χ
 abbrev noise_operator (ρ : ℝ) : BooleanFunc n →ₗ[ℝ] BooleanFunc n := multiplier (ρ^·)
 
 /-- Noise stability  -/
-abbrev noise_stability (ρ : ℝ) (f : BooleanFunc n) := ⟨f, noise_operator ρ f⟩
+abbrev noise_stability (ρ : ℝ) (f : BooleanFunc n) := ⟪f, noise_operator ρ f⟫
 
 lemma noise_stability_eq_sum_fourier {ρ : ℝ} : noise_stability ρ f = ∑ S, ρ^(S.card) * |𝓕 f S|^2 := by
   unfold noise_stability
