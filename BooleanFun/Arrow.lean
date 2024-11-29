@@ -318,7 +318,7 @@ theorem dictator_of_condorcet_and_unanimous (h:IsUnanimous f):
             _ = (-ρ)*(1-ρ^(2*k))    := by rw [pow_mul]
             _ = ρ^(2*k+1)-ρ         := by ring
       · exact sq_nonneg _
-    apply all_zero_of_le_zero_le_of_sum_eq_zero this hsumzero
+    apply (sum_eq_zero_iff_of_nonneg this).mp hsumzero
   }
   have hnez: ∀ k:ℕ, k≠1 → ρ^k - ρ ≠ 0 := by
     intro k
