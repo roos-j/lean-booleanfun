@@ -42,8 +42,8 @@ namespace BooleanFun.BV
 
 open Classical Mathlib Finset Pi
 
-variable {α:Type*} {ι:Type*}
-variable {n:ℕ}
+variable {α : Type*} {ι : Type*}
+variable {n : ℕ}
 
 variable {f : BooleanFunc n} [hbv : BooleanValued f]
 
@@ -63,7 +63,7 @@ instance : BooleanValued (@majority n) where one_or_neg_one := by {
 }
 
 /-- A dictator is a Walsh character of a singleton set. -/
-abbrev dictator {n:ℕ} (i : Fin n) : BooleanFunc n := χ {i}
+abbrev dictator {n : ℕ} (i : Fin n) : BooleanFunc n := χ {i}
 
 /-- Not-all-equal predicate on three values. -/
 abbrev NAE3 (x y z : α) : Prop := ¬ (x = y ∧ y = z)
@@ -226,7 +226,7 @@ lemma _eq_noise_operator : T = @noise_operator n (-1/3) := by
   -- = ∏ i ∈ S, ((-1)^(x i) + 2 * (-1)^(1-x i)) * ∏ i∉S, ..
   rw [← prod_filter_mul_prod_filter_not (p := fun i ↦ i ∈ S), prod_filter, prod_filter]
   -- first product equals (-1)^S.card * ∏ i ∈ S, (-1)^(x i) = (-1)^S.card * χ S x
-  have haux2 (v : Fin 2) : ((-1):ℝ)^v.val + (-1)^(1-v).val * (1 + 1) = (-1) * (-1)^v.val := by
+  have haux2 (v : Fin 2) : ((-1) : ℝ)^v.val + (-1)^(1-v).val * (1 + 1) = (-1) * (-1)^v.val := by
     induction v using Fin.cases with
     | zero => simp
     | succ k => simp [Fin.fin_one_eq_zero k]
@@ -286,11 +286,11 @@ theorem dictator_of_condorcet_and_unanimous (h : IsUnanimous f):
     contradiction
   intro hc
   have := probabilityCondorcetWinner_eq_one hc
-  let ρ:ℝ := -1/3
+  let ρ : ℝ := -1/3
   have : noise_stability ρ f = ρ := by
     rw [probabilityCondorcetWinner_eq] at this
     calc
-      _ = 1-4/3 * (3/4 * ((1:ℝ)-(noise_stability ρ f))) := by ring
+      _ = 1-4/3 * (3/4 * ((1 : ℝ)-(noise_stability ρ f))) := by ring
       _ = _   := by rw [this]; ring
   have hsumzero : ∑ S, (ρ^S.card - ρ) * |𝓕 f S|^2 = 0 := by
     simp_rw [sub_mul, sum_sub_distrib]
@@ -312,15 +312,15 @@ theorem dictator_of_condorcet_and_unanimous (h : IsUnanimous f):
         · obtain ⟨k, hk⟩ := Nat.not_even_iff_odd.mp hk
           rw [hk]
           calc
-            0 ≤ (-ρ) * (1-(ρ^2)^k)    :=
-              by apply mul_nonneg; norm_num; apply sub_nonneg.mpr;
-                 exact pow_le_one₀ (pow_two_nonneg ρ) (by norm_num)
+            0 ≤ (-ρ) * (1-(ρ^2)^k)    := by
+              apply mul_nonneg; norm_num; apply sub_nonneg.mpr;
+              exact pow_le_one₀ (pow_two_nonneg ρ) (by norm_num)
             _ = (-ρ) * (1-ρ^(2 * k))    := by rw [pow_mul]
             _ = ρ^(2 * k + 1)-ρ         := by ring
       · exact sq_nonneg _
     apply (sum_eq_zero_iff_of_nonneg this).mp hsumzero
   }
-  have hnez : ∀ k:ℕ, k ≠ 1 → ρ^k - ρ ≠ 0 := by
+  have hnez : ∀ k : ℕ, k ≠ 1 → ρ^k - ρ ≠ 0 := by
     intro k
     apply not_imp_not.mpr
     intro h

@@ -57,12 +57,12 @@ noncomputable section
 open Real BigOperators Function Finset Pi
 
 /-- A Boolean function maps an `n`-tuple of bits (of type `Fin n → Fin 2`) to a real number. -/
-abbrev BooleanFunc (n:ℕ) : Type := (Fin n → Fin 2) → ℝ
+abbrev BooleanFunc (n : ℕ) : Type := (Fin n → Fin 2) → ℝ
 
-variable {α:Type*}
+variable {α : Type*}
 
-variable {n:ℕ} {f g : BooleanFunc n} {x y : Fin n → Fin 2} {i : Fin n}
-variable {S S':Finset (Fin n)} {v : Fin 2}
+variable {n : ℕ} {f g : BooleanFunc n} {x y : Fin n → Fin 2} {i : Fin n}
+variable {S S' : Finset (Fin n)} {v : Fin 2}
 
 lemma two_eq_zero : (2 : Fin n → Fin 2) = 0 := by
   obtain hn|hn := isEmpty_or_nonempty (Fin n)
@@ -95,7 +95,7 @@ def expectation : BooleanFunc n →ₗ[ℝ] ℝ := {
 }
 
 /-- Expectation of a Boolean function -/
-notation "𝐄" => expectation
+scoped notation "𝐄" => expectation
 
 lemma expectation_mul_apply : 𝐄 (fun x ↦ (f x) * (g x)) = 𝐄 (f * g) := by rfl
 
@@ -103,7 +103,7 @@ lemma expectation_mul_apply : 𝐄 (fun x ↦ (f x) * (g x)) = 𝐄 (f * g) := b
 abbrev walshCharacter (S : Finset (Fin n)) : BooleanFunc n := fun x ↦ ∏ i ∈ S, (-1)^(x i).val
 
 /-- Walsh character -/
-notation "χ" => walshCharacter
+scoped notation "χ" => walshCharacter
 
 lemma walsh_def : χ S x = ∏ i ∈ S, (-1)^(x i).val := by rfl
 
@@ -142,7 +142,7 @@ def fourierTransform : BooleanFunc n →ₗ[ℝ] BooleanFunc' n := {
 }
 
 /-- Walsh-Fourier transform on Boolean functions -/
-notation "𝓕" => fourierTransform
+scoped notation "𝓕" => fourierTransform
 
 theorem expectation_eq_fourier : 𝐄 f = 𝓕 f ∅ := by
   unfold fourierTransform
@@ -155,7 +155,7 @@ theorem expectation_eq_fourier : 𝐄 f = 𝓕 f ∅ := by
 --use bilinear map API?
 abbrev inner_product {n : ℕ} (f g : BooleanFunc n) : ℝ := 𝐄 (f * g)
 
-@[simp]
+@[scoped simp]
 theorem inner_prod_self_nn : inner_product f f ≥ 0 := by
   apply mul_nonneg
   norm_num
@@ -208,10 +208,10 @@ instance instInnerProductSpaceBooleanFunc : InnerProductSpace ℝ (BooleanFunc n
   InnerProductSpace.ofCore instInnerProductSpaceCoreBooleanFunc
 
 /-- Inner product of Boolean functions -/
-notation "⟨" f ", " g "⟩" => inner (𝕜 := ℝ) f g
+scoped notation "⟨" f ", " g "⟩" => inner (𝕜 := ℝ) f g
 
 
-@[local simp]
+@[scoped simp]
 lemma inner_eq_inner_product : ⟨f, g⟩ = inner_product f g := by rfl
 
 instance : Norm (BooleanFunc n) := InnerProductSpace.Core.toNorm (𝕜 := ℝ) (F := BooleanFunc n)
@@ -232,7 +232,7 @@ lemma walsh_sq_eq_one : (χ S)^2 = 1 := by
   ring_nf
   simp
 
-@[simp]
+@[scoped simp]
 lemma expectation_one : @expectation n 1 = 1 := by
   unfold expectation
   simp only [one_div, inv_pow, LinearMap.coe_mk, AddHom.coe_mk, Pi.one_apply, sum_const, card_univ,
@@ -244,14 +244,14 @@ lemma norm_sq_eq_inner : ‖f‖^2 = ⟨f, f⟩ := by
   rw [← RCLike.re_to_real (x := ⟨f, f⟩), ← InnerProductSpace.norm_sq_eq_inner]
 
 /-- Walsh characters are L² normalized. -/
-@[local simp]
+@[scoped simp]
 theorem walsh_norm_one (S : Finset (Fin n)) : ‖χ S‖ = 1 := by
   rw [norm_eq_sqrt_inner (𝕜 := ℝ)]
   simp only [sqrt_eq_one, inner_eq_inner_product, inner_product]
   rw [← pow_two, walsh_sq_eq_one]
   simp
 
-@[local simp]
+@[scoped simp]
 theorem walsh_inner_self_eq_one : ⟨χ S, χ S⟩ = 1 := by
   rw [← norm_sq_eq_inner, walsh_norm_one, one_pow]
 
@@ -264,7 +264,7 @@ theorem walsh_mul_eq : χ S * χ S' = χ (symmDiff S S') := by
   repeat rw [prod_union (disjoint_sdiff_inter _ _)]
   rw [inter_comm S]
   ring_nf
-  have haux : (∏ i ∈ S' ∩ S, ((-1:ℝ)^(x i).val)) ^ 2 = 1 := by
+  have haux : (∏ i ∈ S' ∩ S, ((-1 : ℝ)^(x i).val)) ^ 2 = 1 := by
     rw [← prod_pow]; ring_nf; simp
   rw [haux, mul_one]
   rw [← prod_union]
@@ -281,20 +281,20 @@ lemma inner_eq_expectation : ⟨f, g⟩ = 𝐄 (f * g) := by rfl
 lemma fourier_eq_inner : 𝓕 f S = ⟨χ S, f⟩ := by rfl
 
 /-- Flip the `i₀`th bit of `x`. -/
-def flipAt (i₀:Fin n) (x : Fin n → Fin 2) : Fin n→ Fin 2 := fun i ↦ if i = i₀ then 1-x i else x i
+def flipAt (i₀ : Fin n) (x : Fin n → Fin 2) : Fin n→ Fin 2 := fun i ↦ if i = i₀ then 1-x i else x i
 
 /-- The `i₀`th bit of `x` is flipped. -/
-lemma flipAt_flipped {i₀:Fin n} {x : Fin n → Fin 2} : flipAt i₀ x i₀ = 1- x i₀ := by
+lemma flipAt_flipped {i₀ : Fin n} {x : Fin n → Fin 2} : flipAt i₀ x i₀ = 1- x i₀ := by
   unfold flipAt
   split_ifs <;> tauto
 
 /-- Bits that are not the `i₀`th bits remain unchanged. -/
-lemma flipAt_unflipped {i i₀:Fin n} {h : i ≠ i₀} {x : Fin n → Fin 2} : flipAt i₀ x i = x i := by
+lemma flipAt_unflipped {i i₀ : Fin n} {h : i ≠ i₀} {x : Fin n → Fin 2} : flipAt i₀ x i = x i := by
   unfold flipAt
   split_ifs <;> tauto
 
 /-- Flipping a bit twice results in no change. -/
-lemma flipAt_flipAt_eq {i₀:Fin n} {x : Fin n → Fin 2} : flipAt i₀ (flipAt i₀ x) = x := by
+lemma flipAt_flipAt_eq {i₀ : Fin n} {x : Fin n → Fin 2} : flipAt i₀ (flipAt i₀ x) = x := by
   unfold flipAt
   funext i
   split_ifs with h
@@ -302,12 +302,12 @@ lemma flipAt_flipAt_eq {i₀:Fin n} {x : Fin n → Fin 2} : flipAt i₀ (flipAt 
   rfl
 
 /-- Flipping a bit is an involution on `Fin n → Fin 2`. -/
-theorem flipAt_involutive {i₀:Fin n} : Function.Involutive (flipAt i₀) := by
+theorem flipAt_involutive {i₀ : Fin n} : Function.Involutive (flipAt i₀) := by
   intro x
   rw [flipAt_flipAt_eq]
 
 /-- Flipping a bit is a bijection on `Fin n → Fin 2`. -/
-theorem flipAt_bijective {i₀:Fin n} : Function.Bijective (flipAt i₀) :=
+theorem flipAt_bijective {i₀ : Fin n} : Function.Bijective (flipAt i₀) :=
     Function.Involutive.bijective (flipAt_involutive)
 
 theorem expectation_walsh_eq_zero (hS : S.Nonempty) : 𝐄 (χ S) = 0 := by
@@ -323,8 +323,8 @@ theorem expectation_walsh_eq_zero (hS : S.Nonempty) : 𝐄 (χ S) = 0 := by
   conv =>
     enter [1, 1, 2, x]
     tactic =>
-      have h : (if x i₀ = 0 then (-1)^(x i₀).val * ∏ x_1 ∈ S.erase i₀, (-1:ℝ) ^ (x x_1).val else 0:ℝ) =
-      (if x i₀ = 0 then ∏ x_1 ∈ S.erase i₀, (-1:ℝ) ^ (x x_1).val else 0:ℝ) := by
+      have h : (if x i₀ = 0 then (-1)^(x i₀).val * ∏ x_1 ∈ S.erase i₀, (-1 : ℝ) ^ (x x_1).val else 0 : ℝ) =
+      (if x i₀ = 0 then ∏ x_1 ∈ S.erase i₀, (-1 : ℝ) ^ (x x_1).val else 0 : ℝ) := by
         split_ifs with h
         rw [h]
         simp
@@ -333,7 +333,7 @@ theorem expectation_walsh_eq_zero (hS : S.Nonempty) : 𝐄 (χ S) = 0 := by
   conv =>
     enter [1, 2, 2, x]
     tactic =>
-      have h : (if ¬x i₀ = 0 then (-1)^(x i₀).val * ∏ x_1 ∈ S.erase i₀, (-1:ℝ) ^ (x x_1).val else 0:ℝ) = (if ¬x i₀ = 0 then -∏ x_1 ∈ S.erase i₀, (-1:ℝ) ^ (x x_1).val else 0:ℝ) := by
+      have h : (if ¬x i₀ = 0 then (-1)^(x i₀).val * ∏ x_1 ∈ S.erase i₀, (-1 : ℝ) ^ (x x_1).val else 0 : ℝ) = (if ¬x i₀ = 0 then -∏ x_1 ∈ S.erase i₀, (-1 : ℝ) ^ (x x_1).val else 0 : ℝ) := by
         split_ifs with h
         rfl
         rw [Fin.eq_one_of_neq_zero _ h]
@@ -358,7 +358,7 @@ theorem expectation_walsh_eq_zero (hS : S.Nonempty) : 𝐄 (χ S) = 0 := by
   rw [Fin.eq_one_of_neq_zero _ h3] at h1
   contradiction
 
-theorem walsh_orthogonal (S S':Finset (Fin n)) (h : S ≠ S') : ⟨χ S, χ S'⟩ = 0 := by
+theorem walsh_orthogonal (S S' : Finset (Fin n)) (h : S ≠ S') : ⟨χ S, χ S'⟩ = 0 := by
   simp
   unfold inner_product
   simp [walsh_mul_eq]
@@ -367,7 +367,7 @@ theorem walsh_orthogonal (S S':Finset (Fin n)) (h : S ≠ S') : ⟨χ S, χ S'�
   simp at h1
   contradiction
 
-@[local simp]
+@[scoped simp]
 theorem walsh_inner_eq : ⟨χ S, χ S'⟩ = oneOn (S = S') := by
   unfold oneOn
   split_ifs with h
@@ -398,8 +398,9 @@ theorem walsh_fourier (f : BooleanFunc n) : f = ∑ S : Finset (Fin n), (𝓕 f 
   simp
 
 lemma fourier_walsh : 𝓕 (χ S) S' = oneOn (S' = S) := by
-  calc _ = ⟨χ S', χ S⟩   := by rfl
-       _ = oneOn (S' = S) := walsh_inner_eq
+  calc
+    _ = ⟨χ S', χ S⟩     := by rfl
+    _ = oneOn (S' = S) := walsh_inner_eq
 
 /-- Plancherel/Parseval theorem for Boolean functions. -/
 theorem inner_eq_sum_fourier : ⟨f, g⟩ = ∑ S : Finset (Fin n), (𝓕 f S) * (𝓕 g S) := by
@@ -413,18 +414,16 @@ theorem walsh_plancherel : ‖f‖^2 = ∑ S : Finset (Fin n), |𝓕 f S|^2 := b
 
 /-- Set the `i₀`th bit of `x` to `v`.
 TODO : possibly use Mathlib's `Function.update` -/
-abbrev setAt (i₀:Fin n) (v : Fin 2) (x : Fin n → Fin 2) : Fin n → Fin 2 :=
+abbrev setAt (i₀ : Fin n) (v : Fin 2) (x : Fin n → Fin 2) : Fin n → Fin 2 :=
   fun i ↦ if i = i₀ then v else x i
 
 /-- The `i₀`th bit of `setAt i₀ v x` has value `v`. -/
-lemma setAt_it (i₀:Fin n) (v : Fin 2) (x : Fin n → Fin 2) : setAt i₀ v x i₀ = v := by
-  unfold setAt
-  split_ifs <;> tauto
+lemma setAt_it (i₀ : Fin n) (v : Fin 2) (x : Fin n → Fin 2) : setAt i₀ v x i₀ = v := by
+  unfold setAt; split_ifs <;> tauto
 
 /-- Bits other than the `i₀`th bit are unaffected by `setAt`. -/
-lemma setAt_other (i₀:Fin n) (v : Fin 2) (x : Fin n → Fin 2) (i : Fin n) (h : i₀ ≠ i) : setAt i₀ v x i = x i := by
-  unfold setAt
-  split_ifs <;> tauto
+lemma setAt_other (i₀ : Fin n) (v : Fin 2) (x : Fin n → Fin 2) (i : Fin n) (h : i₀ ≠ i) : setAt i₀ v x i = x i := by
+  unfold setAt; split_ifs <;> tauto
 
 /-- Discrete partial "derivative" of a Boolean function with respect to the `i`th coordinate.
 See Def. 2.16 in [odonnell2014]. -/
@@ -533,7 +532,7 @@ theorem laplace_walsh (i : Fin n) (S : Finset (Fin n)) : laplace i (χ S) = ite 
   split_ifs with h
   · unfold walshCharacter
     rw [← erase_eq]
-    rw [mul_prod_erase (s := S) (a := i) (f := fun i ↦ (-1:ℝ)^(x i).val) h]
+    rw [mul_prod_erase (s := S) (a := i) (f := fun i ↦ (-1 : ℝ)^(x i).val) h]
   · simp only [Pi.zero_apply, mul_zero]
 
 theorem laplace_eq_sum_fourier (i : Fin n) (f : BooleanFunc n) : laplace i f = ∑ S ∈ {S | i ∈ S}, 𝓕 f S•χ (S) := by
@@ -649,7 +648,7 @@ section FourierWeight
 -- some redundancy in this section
 
 /-- The `k`th Fourier weight is the sum of squares of degree `k` Fourier coefficients -/
-abbrev fourierWeight (k:ℕ) (f : BooleanFunc n) : ℝ := ∑ S ∈ {S | S.card = k}, |𝓕 f S|^2
+abbrev fourierWeight (k : ℕ) (f : BooleanFunc n) : ℝ := ∑ S ∈ {S | S.card = k}, |𝓕 f S|^2
 
 /-- Alternative expression for degree one Fourier weight in terms in terms of sum over coordinates -/
 abbrev fourierWeightOne (f : BooleanFunc n) : ℝ := ∑ i, |𝓕 f {i}|^2
@@ -657,7 +656,7 @@ abbrev fourierWeightOne (f : BooleanFunc n) : ℝ := ∑ i, |𝓕 f {i}|^2
 lemma fourier_weight_one {f : BooleanFunc n} : fourierWeight 1 f = fourierWeightOne f := by
   apply sum_singletons; intro i; rfl
 
-lemma fourier_eq_zero_iff_fourier_weight_eq {k:ℕ} {f : BooleanFunc n}:
+lemma fourier_eq_zero_iff_fourier_weight_eq {k : ℕ} {f : BooleanFunc n}:
     (∀ S, S.card ≠ k → 𝓕 f S = 0) ↔ fourierWeight k f = ‖f‖^2 := by
   constructor
   · intro h
@@ -666,26 +665,27 @@ lemma fourier_eq_zero_iff_fourier_weight_eq {k:ℕ} {f : BooleanFunc n}:
     symm
     rw [walsh_plancherel]
     calc
-      _ = fourierWeight k f + ∑ S ∈ {S | S.card ≠ k}, |𝓕 f S|^2 :=
-        by rw [sum_filter_add_sum_filter_not]
-      _ = fourierWeight k f + ∑ S, if S.card ≠ k then |𝓕 f S|^2 else 0 :=
-        by rw [sum_filter]
-      _ = fourierWeight k f :=
-        by conv => {enter [1, 2, 2, S]; rw [rw_ite_left (h S), ite_self]}; simp
+      _ = fourierWeight k f + ∑ S ∈ {S | S.card ≠ k}, |𝓕 f S|^2 := by
+        rw [sum_filter_add_sum_filter_not]
+      _ = fourierWeight k f + ∑ S, if S.card ≠ k then |𝓕 f S|^2 else 0 := by
+        rw [sum_filter]
+      _ = fourierWeight k f := by
+        conv => {enter [1, 2, 2, S]; rw [rw_ite_left (h S), ite_self]}; simp
   · intro h S hS
     have : ∑ S ∈ {S | S.card ≠ k}, |𝓕 f S|^2 = 0 := by
       symm
-      calc 0 = ‖f‖^2 - ‖f‖^2                              := by ring
-          _ = ∑ S, |𝓕 f S|^2 - fourierWeight k f          := by rw [h, walsh_plancherel]
-          _ = ∑ S ∈ {S | S.card = k}, |𝓕 f S|^2 + ∑ S ∈ {S | S.card ≠ k}, |𝓕 f S|^2
-                - fourierWeight k f                       := by rw [sum_filter_add_sum_filter_not]
-          _ = ∑ S ∈ {S | S.card ≠ k}, |𝓕 f S|^2             := by rw [add_comm, add_sub_assoc, sub_self, add_zero]
+      calc
+        0 = ‖f‖^2 - ‖f‖^2                           := by ring
+        _ = ∑ S, |𝓕 f S|^2 - fourierWeight k f      := by rw [h, walsh_plancherel]
+        _ = ∑ S ∈ {S | S.card = k}, |𝓕 f S|^2 + ∑ S ∈ {S | S.card ≠ k}, |𝓕 f S|^2
+          - fourierWeight k f                       := by rw [sum_filter_add_sum_filter_not]
+        _ = ∑ S ∈ {S | S.card ≠ k}, |𝓕 f S|^2       := by rw [add_comm, add_sub_assoc, sub_self, add_zero]
     have := (sum_eq_zero_iff_of_nonneg <| by intro S _; apply pow_two_nonneg).mp this
     specialize this S (by simp [hS])
     rw [sq_abs, pow_eq_zero_iff (by trivial)] at this
     assumption
 
-lemma eq_sum_fourier_of_fourier_weight {k:ℕ} {f : BooleanFunc n} (h : fourierWeight k f = ‖f‖^2):
+lemma eq_sum_fourier_of_fourier_weight {k : ℕ} {f : BooleanFunc n} (h : fourierWeight k f = ‖f‖^2):
     f = ∑ S ∈ {S|S.card = k}, 𝓕 f S • χ S := by
   have hf : ∑ S ∈ {S | S.card ≠ k}, 𝓕 f S•χ S = 0 := by
     rw [sum_eq_zero]
@@ -708,7 +708,7 @@ lemma eq_sum_degree_one_of_fourier_weight_one {f : BooleanFunc n} (h : fourierWe
   intro i
   simp only [Pi.smul_apply, prod_singleton, smul_eq_mul]
 
-lemma eq_sum_degree_one_of_fourier_eq_zero {f : BooleanFunc n} (h:∀ S, S.card ≠ 1 → 𝓕 f S = 0):
+lemma eq_sum_degree_one_of_fourier_eq_zero {f : BooleanFunc n} (h : ∀ S, S.card ≠ 1 → 𝓕 f S = 0):
     ∀ x, f x = ∑ i, 𝓕 f {i} * (-1)^(x i).val :=
   eq_sum_degree_one_of_fourier_weight_one (fourier_eq_zero_iff_fourier_weight_eq.mp h)
 
@@ -717,7 +717,7 @@ end FourierWeight
 section Multiplier
 
 /-- Walsh-Fourier multiplier as an ℝ-linear operator on Boolean functions -/
-def multiplier (m:ℕ → ℝ) : BooleanFunc n →ₗ[ℝ] BooleanFunc n := {
+def multiplier (m : ℕ → ℝ) : BooleanFunc n →ₗ[ℝ] BooleanFunc n := {
   toFun := fun f ↦ ∑ S : Finset (Fin n), (m S.card)•𝓕 f S•χ S
   map_add' := by
     intro f g
@@ -738,19 +738,19 @@ def multiplier (m:ℕ → ℝ) : BooleanFunc n →ₗ[ℝ] BooleanFunc n := {
 }
 
 /-- Walsh characters are eigenfunctions of multipliers. -/
-lemma multiplier_walsh {m:ℕ → ℝ} {S : Finset (Fin n)} : multiplier m (χ S) = (m S.card)•χ S := by
+lemma multiplier_walsh {m : ℕ → ℝ} {S : Finset (Fin n)} : multiplier m (χ S) = (m S.card)•χ S := by
   unfold multiplier
   simp only [LinearMap.coe_mk, AddHom.coe_mk]
   conv => enter [1, 2, S']; rw [fourier_walsh]
   simp
 
 /-- The noise operator defined via Fourier expansion. See Prop. 2.47 in [odonnell2014]. -/
-abbrev noise_operator (ρ:ℝ) : BooleanFunc n →ₗ[ℝ] BooleanFunc n := multiplier (ρ^·)
+abbrev noise_operator (ρ : ℝ) : BooleanFunc n →ₗ[ℝ] BooleanFunc n := multiplier (ρ^·)
 
 /-- Noise stability  -/
-abbrev noise_stability (ρ:ℝ) (f : BooleanFunc n) := ⟨f, noise_operator ρ f⟩
+abbrev noise_stability (ρ : ℝ) (f : BooleanFunc n) := ⟨f, noise_operator ρ f⟩
 
-lemma noise_stability_eq_sum_fourier {ρ:ℝ} : noise_stability ρ f = ∑ S, ρ^(S.card) * |𝓕 f S|^2 := by
+lemma noise_stability_eq_sum_fourier {ρ : ℝ} : noise_stability ρ f = ∑ S, ρ^(S.card) * |𝓕 f S|^2 := by
   unfold noise_stability
   nth_rewrite 1 [walsh_fourier f]
   unfold noise_operator multiplier
@@ -772,7 +772,7 @@ section Convolution
 abbrev convolution (f g : BooleanFunc n) : BooleanFunc n := fun x ↦ 𝐄 (fun y ↦ (f y) * (g (x + y)))
 
 /-- Discrete convolution of Boolean functions -/
-infixl : 67 "⋆" => convolution
+scoped infixl : 67 "⋆" => convolution
 
 -- lemma convolution_comm : f⋆g = g⋆f := by
 --   sorry

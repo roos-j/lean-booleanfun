@@ -25,7 +25,7 @@ namespace BooleanFun
 
 open BooleanFun Finset Function Fin
 
-variable {n:ℕ} {f g : BooleanFunc n} {x : Fin n → Fin 2}
+variable {n : ℕ} {f g : BooleanFunc n} {x : Fin n → Fin 2}
 
 /-- `BooleanValued f` bundles a proof that `f` takes values `±1`. -/
 class BooleanValued (f : BooleanFunc n) : Prop where
@@ -50,7 +50,7 @@ lemma norm_sq_eq_one:
       have : f x * f x = 1 := by
         cases hbv.one_or_neg_one x with | _ => simp [*]
     rw [this]
-  have : (fun _ : Fin n → Fin 2 ↦ (1:ℝ)) = (1 : BooleanFunc n) := by ext; simp
+  have : (fun _ : Fin n → Fin 2 ↦ (1 : ℝ)) = (1 : BooleanFunc n) := by ext; simp
   simp [this]
 
 lemma fourier_eq_one:
@@ -58,10 +58,10 @@ lemma fourier_eq_one:
   rw [← walsh_plancherel]
   exact norm_sq_eq_one
 
-lemma eq_neg_one_of_ne_one (h':f x ≠ 1) : f x = -1 :=
+lemma eq_neg_one_of_ne_one (h' : f x ≠ 1) : f x = -1 :=
   or_iff_not_imp_left.mp (hbv.one_or_neg_one x) h'
 
-lemma eq_one_of_ne_neg_one (h':f x ≠ -1) : f x = 1 :=
+lemma eq_one_of_ne_neg_one (h' : f x ≠ -1) : f x = 1 :=
   or_iff_not_imp_right.mp (hbv.one_or_neg_one x) h'
 
 instance neg_boolean_valued [hbv : BooleanValued f] : BooleanValued (-f) where
@@ -77,8 +77,8 @@ section DegreeOne
 times a degree one character.
 Most involved step towards `eq_character_of_fourier_weight_one_eq_one`. -/
 -- Unfortunately a bit lengthy
-lemma eq_character_of_eq_sum_degree_one (hn : n>0) (hf:∀ x, f x = ∑ i, 𝓕 f {i} * (-1)^(x i).val):
-    ∃ S ∈ {S|S.card = 1}, ∃ c:ℝ, f = c•χ S := by
+lemma eq_character_of_eq_sum_degree_one (hn : n>0) (hf : ∀ x, f x = ∑ i, 𝓕 f {i} * (-1)^(x i).val):
+    ∃ S ∈ {S|S.card = 1}, ∃ c : ℝ, f = c•χ S := by
   wlog hf1 : f 0 = 1 with h1
   { -- replace f by -f
     -- have h' : IsBooleanValued (-f) := neg_is_boolean_valued (h := h)
@@ -143,22 +143,22 @@ lemma eq_character_of_eq_sum_degree_one (hn : n>0) (hf:∀ x, f x = ∑ i, 𝓕 
           rw [hf0eq]
           conv => enter [1, 2, i]; rw [this]
           simp; ring
-        have : (1:ℝ) ≥ 2 := by
-          calc 1 = f 0   := by symm; exact hf1
-               _ = n + 2 := by exact this
-               _ ≥ 0 + 2 := by gcongr; exact Nat.cast_nonneg n
-               _ = 2     := by simp
-        have : ¬(1:ℝ)≥2  := by simp
+        have : (1 : ℝ) ≥ 2 := by
+          calc
+            1 = f 0   := by symm; exact hf1
+            _ = n + 2 := by exact this
+            _ ≥ 0 + 2 := by gcongr; exact Nat.cast_nonneg n
+            _ = 2     := by simp
+        have : ¬(1 : ℝ)≥2  := by simp
         exact this (by assumption)
       obtain ⟨i₀, hi₀⟩ := this -- this coordinate must have zero coefficient
       have hFi0zero : 𝓕 f {i₀} = 0 := by
         symm
-        calc 0 = (1 - 1)/2                  := by ring
-             _ = (f 0 - f (flipAt i₀ 0))/2 := by rw [hf1, hi₀]
-             _ = ((∑ i, 𝓕 f {i} - ∑ i ∈ univ.erase i₀, 𝓕 f {i}) + 𝓕 f {i₀})/2 :=
-              by rw [hf0eq, hf0feq]; ring
-             _ = 𝓕 f {i₀} :=
-              by rw [← sum_erase_add (a := i₀) (h := mem_univ i₀)]; ring
+        calc
+          0 = (1 - 1)/2                  := by ring
+          _ = (f 0 - f (flipAt i₀ 0))/2 := by rw [hf1, hi₀]
+          _ = ((∑ i, 𝓕 f {i} - ∑ i ∈ univ.erase i₀, 𝓕 f {i}) + 𝓕 f {i₀})/2 := by rw [hf0eq, hf0feq]; ring
+          _ = 𝓕 f {i₀} := by rw [← sum_erase_add (a := i₀) (h := mem_univ i₀)]; ring
       -- apply inductive hypothesis to the fiber with i₀ coordinate fixed
       let g : BooleanFunc (n + 1) := fun x ↦ f (Fin.insertNth i₀ 0 x)
       have hgeq : g = ∑ i, 𝓕 f {i₀.succAbove i}•χ {i} := by
@@ -185,13 +185,13 @@ lemma eq_character_of_eq_sum_degree_one (hn : n>0) (hf:∀ x, f x = ∑ i, 𝓕 
         · exact mem_univ i₀
       have : ∀ i, 𝓕 g {i} = 𝓕 f {i₀.succAbove i} := by
         intro i
-        calc _ = ⟨χ {i}, g⟩       := by rfl
-             _ = ⟨χ {i}, ∑ i, 𝓕 f {i₀.succAbove i}•χ {i}⟩ := by rw [hgeq]
-             _ = ∑ i', 𝓕 f {i₀.succAbove i'} * ⟨χ {i}, χ {i'}⟩ := by
-                  rw [inner_sum]; conv => enter[1, 2, i']; rw [inner_smul_right]
-             _ = 𝓕 f {i₀.succAbove i}                     := by
-                  conv => enter [1, 2, i']; rw [walsh_inner_eq]
-                  simp
+        calc
+          _ = ⟨χ {i}, g⟩       := by rfl
+          _ = ⟨χ {i}, ∑ i, 𝓕 f {i₀.succAbove i}•χ {i}⟩ := by rw [hgeq]
+          _ = ∑ i', 𝓕 f {i₀.succAbove i'} * ⟨χ {i}, χ {i'}⟩ := by
+            rw [inner_sum]; conv => enter[1, 2, i']; rw [inner_smul_right]
+          _ = 𝓕 f {i₀.succAbove i}                     := by
+            (conv => enter [1, 2, i']; rw [walsh_inner_eq]); simp
       have hgeq' : ∀ x, g x = ∑ i, 𝓕 g {i} * (-1)^(x i).val := by
         intro x; nth_rewrite 1 [hgeq]; rw [sum_apply]; apply sum_congr (by rfl); intro i _; simp [this]
       have : g 0 = 1 := by unfold g; simp; exact hf1
@@ -210,26 +210,26 @@ lemma eq_character_of_eq_sum_degree_one (hn : n>0) (hf:∀ x, f x = ∑ i, 𝓕 
         simp
         -- f is independent of i₀-coordinate
         have hfxi : f x = f (update x i₀ 0) := by
-          calc f x = ∑ i, 𝓕 f {i} * (-1)^(x i).val :=
-                  by rw [hf]
-                _  = ∑ i ∈ univ.erase i₀, 𝓕 f {i} * (-1)^(x i).val + 𝓕 f {i₀} * (-1)^(x i₀).val :=
-                  by rw [sum_erase_add (h := mem_univ i₀)]
-                _  = ∑ i ∈ univ.erase i₀, 𝓕 f {i} * (-1)^(x i).val +   0 * (-1)^(update x i₀ 0 i₀).val :=
-                  by rw [hFi0zero]; simp
-                _  = ∑ i ∈ univ.erase i₀, 𝓕 f {i} * (-1)^(update x i₀ 0 i).val +   0 * (-1)^(update x i₀ 0 i₀).val :=
-                  by {congr 1; apply sum_congr (by rfl);
-                        intro i hi; apply ne_of_mem_erase at hi; rw [update_noteq hi]}
-                _ = _ :=
-                  by rw [← hFi0zero, sum_erase_add (h := mem_univ i₀), ← hf]
-        calc _ = f (Fin.insertNth i₀ 0 (Fin.removeNth i₀ x))  := by rw [hfxi, Fin.insertNth_removeNth]
-              _ = g (Fin.removeNth i₀ x)                      := by rfl
-              _ = (c•χ {i₁}) (Fin.removeNth i₀ x)             := by rw [hc, hi₁]
-              _ = _                                           := by simp; left; rfl
+          calc
+            f x = ∑ i, 𝓕 f {i} * (-1)^(x i).val := by rw [hf]
+            _  = ∑ i ∈ univ.erase i₀, 𝓕 f {i} * (-1)^(x i).val + 𝓕 f {i₀} * (-1)^(x i₀).val := by
+              rw [sum_erase_add (h := mem_univ i₀)]
+            _  = ∑ i ∈ univ.erase i₀, 𝓕 f {i} * (-1)^(x i).val +   0 * (-1)^(update x i₀ 0 i₀).val := by
+              rw [hFi0zero]; simp
+            _  = ∑ i ∈ univ.erase i₀, 𝓕 f {i} * (-1)^(update x i₀ 0 i).val +   0 * (-1)^(update x i₀ 0 i₀).val := by
+              {congr 1; apply sum_congr (by rfl); intro i hi; apply ne_of_mem_erase at hi; rw [update_noteq hi]}
+            _ = _ := by
+              rw [← hFi0zero, sum_erase_add (h := mem_univ i₀), ← hf]
+        calc
+          _ = f (Fin.insertNth i₀ 0 (Fin.removeNth i₀ x))  := by rw [hfxi, Fin.insertNth_removeNth]
+          _ = g (Fin.removeNth i₀ x)                      := by rfl
+          _ = (c•χ {i₁}) (Fin.removeNth i₀ x)             := by rw [hc, hi₁]
+          _ = _                                           := by simp; left; rfl
 
 /-- A Boolean valued function with degree one Fourier weight equal to one
 must be `±1` times a degree one character. -/
 lemma eq_character_of_fourier_weight_one_eq_one' (hn : n>0) (hf : fourierWeight 1 f = 1):
-    ∃ S ∈ {S|S.card = 1}, ∃ c:ℝ, f = c•χ S := by
+    ∃ S ∈ {S|S.card = 1}, ∃ c : ℝ, f = c•χ S := by
   have hf' : ∀ x, f x = ∑ i, 𝓕 f {i} * (-1)^(x i).val := by
     apply eq_sum_degree_one_of_fourier_weight_one
     rw [hf, norm_sq_eq_one]
@@ -239,7 +239,7 @@ lemma eq_character_of_fourier_weight_one_eq_one' (hn : n>0) (hf : fourierWeight 
 must be `±1` times a degree one character.
 This is [odonnell2014], Exercise 1.19(a). -/
 lemma eq_character_of_fourier_weight_one_eq_one (hn : n>0) (hf : fourierWeight 1 f = 1):
-    ∃ i, ∃ c:ℝ, f = c•χ {i} := by
+    ∃ i, ∃ c : ℝ, f = c•χ {i} := by
   obtain ⟨S, hS, hS'⟩ := eq_character_of_fourier_weight_one_eq_one' hn hf
   obtain ⟨i, hi⟩ := card_eq_one.mp hS
   use i
@@ -255,11 +255,11 @@ require `f g` be Boolean-valued, but it will only be used in this context. -/
 abbrev distance (f g : BooleanFunc n) : ℝ :=
   𝐄 (fun x ↦ oneOn (f x ≠ g x))
 
-lemma oneOn_eq_of_one_or_neg_one {x y:ℝ} (hx : x = 1 ∨ x = -1) (hy : y = 1 ∨ y = -1):
+lemma oneOn_eq_of_one_or_neg_one {x y : ℝ} (hx : x = 1 ∨ x = -1) (hy : y = 1 ∨ y = -1):
     oneOn (x = y) = (1/2) * (1 + x * y) := by
   obtain ⟨hx|hx, hy|hy⟩ := And.intro hx hy <;> { rw [hx, hy]; norm_num }
 
-lemma oneOn_ne_of_one_or_neg_one {x y:ℝ} (hx : x = 1 ∨ x = -1) (hy : y = 1 ∨ y = -1):
+lemma oneOn_ne_of_one_or_neg_one {x y : ℝ} (hx : x = 1 ∨ x = -1) (hy : y = 1 ∨ y = -1):
     oneOn (x ≠ y) = (1/2) * (1-x * y) := by
   obtain ⟨hx|hx, hy|hy⟩ := And.intro hx hy <;> { rw [hx, hy]; norm_num }
 
@@ -319,7 +319,7 @@ private lemma _aux_lemma : (𝐄 $ fun x ↦ 𝐄 $ fun y ↦ (1/2) * (1 + (f x)
 
 /-- The BLR test can detect that a Boolean valued function is close to being a character.
 See [odonnell2014], Theorem 1.30. -/
-theorem almost_character {ε:ℝ} (h : acceptanceProbabilityBLR f≥1-ε):
+theorem almost_character {ε : ℝ} (h : acceptanceProbabilityBLR f≥1-ε):
     ∃ S, distance f (χ S) ≤ ε := by
   have : 1-ε ≤ (1/2) * (1 + ∑ S, (𝓕 f S) * (𝓕 f S)^2) := by
     calc
@@ -328,8 +328,8 @@ theorem almost_character {ε:ℝ} (h : acceptanceProbabilityBLR f≥1-ε):
       _ = (1/2) * (1 + (𝐄 $ fun x ↦ (f x) * (𝐄 $ fun y ↦ (f y) * (f (x + y))))) := _aux_lemma
       _ = (1/2) * (1 + (𝐄 $ fun x ↦ (f x) * (f⋆f) x))                      := by rfl
       _ = (1/2) * (1 + 𝐄 (f * (f⋆f)))                                     := by rw [expectation_mul_apply]
-      _ = (1/2) * (1 + ∑ S, (𝓕 f S) * (𝓕 (f⋆f) S))                        :=
-        by rw [← inner_eq_expectation, inner_eq_sum_fourier]
+      _ = (1/2) * (1 + ∑ S, (𝓕 f S) * (𝓕 (f⋆f) S))                        := by
+        rw [← inner_eq_expectation, inner_eq_sum_fourier]
       _ = _ := by rw [fourier_convolution]; simp_rw [Pi.mul_apply, pow_two]
   have : ∃ S₀, ∀ S, 𝓕 f S ≤ 𝓕 f S₀ := Finite.exists_max (𝓕 f ·)
   obtain ⟨S₀, hS₀⟩ := this

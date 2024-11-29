@@ -2,7 +2,7 @@ import Mathlib.Algebra.Order.BigOperators.Group.Finset
 
 namespace Finset
 
-variable {ι N α:Type*}
+variable {ι N α : Type*}
 
 section ToAlgebraOrderBigOperatorsGroupFinset
 
