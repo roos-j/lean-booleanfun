@@ -11,7 +11,7 @@ import Mathlib.Data.Real.Irrational
 
 /-!
 General lemmas not specific to analysis of Boolean functions.
-Some of this should be or may already be in Mathlib.
+These should gradually be removed or converted to `ToMathlib` where appropriate
 -/
 
 namespace BooleanFun
@@ -180,15 +180,6 @@ lemma sum_tuple_prod_distrib {n:ℕ} {f:Fin n→α→β} [Fintype α] [Decidable
     rw [←Fin.prod_univ_castSucc (f:=λ i=>∑ v, f i v)]
 
 end SumProd
-
-section FinsetFilter
-
---@[simp]
-/-- complements `filter_univ_mem` -/
-lemma filter_univ_not_mem [Fintype α] [DecidableEq α] (s : Finset α) :
-    Finset.filter (fun (x : α) => x ∉ s) Finset.univ = sᶜ := by ext; simp
-
-end FinsetFilter
 
 section PowStuff
 
