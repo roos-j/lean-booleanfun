@@ -293,8 +293,8 @@ lemma acceptanceProbabilityBLR_eq : acceptanceProbabilityBLR f =
     (𝐄 $ fun x ↦ 𝐄 $ fun y ↦ (1/2) * (1 + (f x) * (f y) * (f (x + y)))) := by
   have hl : ∀ x y, (f x) * (f y) = 1 ∨ (f x) * (f y) = -1 := by
     intro x y
-    obtain ⟨hx|hx, hy|hy⟩ := And.intro (hbv.one_or_neg_one x) (hbv.one_or_neg_one y)
-      <;> { rw [hx, hy]; simp }
+    obtain ⟨hx|hx, hy|hy⟩ := And.intro (hbv.one_or_neg_one x) (hbv.one_or_neg_one y) <;>
+      { rw [hx, hy]; simp }
   unfold acceptanceProbabilityBLR
   simp_rw [oneOn_eq_of_one_or_neg_one (hl _ _) (hbv.one_or_neg_one _)]
 
@@ -302,7 +302,7 @@ omit hbv in
 -- A "trivial" step in the proof of `almost_character`
 -- would be nice if this could be done with very few tactics
 private lemma _aux_lemma : (𝐄 $ fun x ↦ 𝐄 $ fun y ↦ (1/2) * (1 + (f x) * (f y) * (f (x + y))))
-      = (1/2) * (1 + (𝐄 $ fun x ↦ (f x) * (𝐄 $ fun y ↦ (f y) * (f (x + y))))) := by
+    = (1/2) * (1 + (𝐄 $ fun x ↦ (f x) * (𝐄 $ fun y ↦ (f y) * (f (x + y))))) := by
     unfold expectation
     dsimp
     conv => enter [1, 2, 2, x]; rw [← mul_sum, sum_add_distrib, mul_add, mul_add]
@@ -323,11 +323,12 @@ theorem almost_character {ε : ℝ} (h : acceptanceProbabilityBLR f≥1-ε):
   have : 1-ε ≤ (1/2) * (1 + ∑ S, (𝓕 f S) * (𝓕 f S)^2) := by
     calc
       _ ≤ acceptanceProbabilityBLR f                                := h
-      _ = (𝐄 $ fun x ↦ 𝐄 $ fun y ↦ (1/2) * (1 + (f x) * (f y) * (f (x + y))))   := acceptanceProbabilityBLR_eq
+      _ = (𝐄 $ fun x ↦ 𝐄 $ fun y ↦ (1/2) * (1 + (f x) * (f y) * (f (x + y))))   :=
+        acceptanceProbabilityBLR_eq
       _ = (1/2) * (1 + (𝐄 $ fun x ↦ (f x) * (𝐄 $ fun y ↦ (f y) * (f (x + y))))) := _aux_lemma
-      _ = (1/2) * (1 + (𝐄 $ fun x ↦ (f x) * (f⋆f) x))                      := by rfl
-      _ = (1/2) * (1 + 𝐄 (f * (f⋆f)))                                     := by rw [expectation_mul_apply]
-      _ = (1/2) * (1 + ∑ S, (𝓕 f S) * (𝓕 (f⋆f) S))                        := by
+      _ = (1/2) * (1 + (𝐄 $ fun x ↦ (f x) * (f⋆f) x))                      := rfl
+      _ = (1/2) * (1 + 𝐄 (f * (f⋆f)))                                     := rfl
+      _ = (1/2) * (1 + ∑ S, (𝓕 f S) * (𝓕 (f⋆f) S)) := by
         rw [← inner_eq_expectation, inner_eq_sum_fourier]
       _ = _ := by rw [fourier_convolution]; simp_rw [Pi.mul_apply, pow_two]
   have : ∃ S₀, ∀ S, 𝓕 f S ≤ 𝓕 f S₀ := Finite.exists_max (𝓕 f ·)

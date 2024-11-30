@@ -29,12 +29,6 @@ variable [Ring R] [AddCommGroup M] [Module R M]
 
 section Singleton
 
-lemma card_eq_one {S : Finset α} : S.card = 1 ↔ ∃ i : α, S = {i} := by {
-    have := (Multiset.card_eq_one (α := α) (s := S.val))
-    simp only [card_val, val_eq_singleton_iff] at this
-    assumption
-}
-
 -- not to be confused with `Finset.sum_singleton`
 lemma sum_singletons [AddCommMonoid α] {F : Finset ι → α} {G : ι → α} (h : ∀ i, F {i} = G i):
     ∑ S ∈ {S|S.card = 1}, F S = ∑ i, G i := by {
@@ -123,11 +117,6 @@ lemma oneOn_prod {p : ι → Prop} : ∏ i, oneOn (p i) = oneOn (∀ i, p i) := 
 end OneOn
 
 section PowStuff
-
-/-- natural number version of `zpow_sub₀` -/
-lemma npow_sub₀ {G : Type*} [GroupWithZero G] {a : G} {m n : ℕ} (ha : a ≠ 0) (h : n≤m):
-    a^(m-n) = a^m / a^n := by
-  rw [← zpow_natCast, ← zpow_natCast, ← zpow_natCast, Nat.cast_sub h, zpow_sub₀ ha]
 
 /-- Solutions of the equation `ρᵏ = ρ` in real numbers. -/
 lemma pow_eq_self_imp {ρ : ℝ} {k : ℕ}:

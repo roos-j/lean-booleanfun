@@ -51,7 +51,7 @@ variable {f : BooleanFunc n} [hbv : BooleanValued f]
 abbrev Votes n := Fin n → Fin 2
 
 /-- `±1`-valued majority function -/
-def majority : BooleanFunc n := fun x ↦ if ∑ j,  (x j).val > n/2 then 1 else -1
+def majority : BooleanFunc n := fun x ↦ if ∑ j, (x j).val > n/2 then 1 else -1
 
 /-- The majority function is Boolean valued. -/
 instance : BooleanValued (@majority n) where one_or_neg_one := by {
@@ -117,8 +117,8 @@ lemma oneOn_NAE3_eq {x y z : Fin n → Fin 2}:
     oneOn (NAE3 (f x) (f y) (f z)) = 3/4 - (1/4) * (f x) * (f y) - (1/4) * (f y) * (f z) - (1/4) * (f x) * (f z) := by
   unfold oneOn NAE3
   obtain ⟨h0|h0, h1|h1, h2|h2⟩ := And.intro (hbv.one_or_neg_one x)
-    (And.intro (hbv.one_or_neg_one y) (hbv.one_or_neg_one z))
-    <;> { rw [h0, h1, h2]; norm_num }
+    (And.intro (hbv.one_or_neg_one y) (hbv.one_or_neg_one z)) <;>
+      { rw [h0, h1, h2]; norm_num }
 
 /-- The probability of a Condorcet winner equals the proportion out of
     the `6ⁿ` possible voter preferences `(x, y, z)` so that `(f(x), f(y), f(z))`
@@ -235,7 +235,7 @@ lemma _eq_noise_operator : T = @noise_operator n (-1/3) := by
   -- second product equals ∏ i∉S, 3 = 3^(n-S.card)
   conv => enter [1, 2, 2, 2, i]; rw [ite_mul, ite_add_ite, ite_ite_not']; arg 2; norm_num
   rw [← prod_filter, prod_const, filter_univ_not_mem, card_compl, Fintype.card_fin]
-  rw [npow_sub₀ (by simp) (card_finset_fin_le _)]
+  rw [pow_sub₀ _ (by simp) (card_finset_fin_le _)]
   field_simp -- todo : speedup
 
 /-- The probability of having a Condorcet winner can be expressed in terms of the noise operator.

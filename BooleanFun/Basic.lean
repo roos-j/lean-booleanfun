@@ -67,6 +67,7 @@ variable {n : ℕ} {f g : BooleanFunc n} {x y : Fin n → Fin 2} {i : Fin n}
 variable {S S' : Finset (Fin n)} {v : Fin 2}
 
 lemma two_eq_zero : (2 : Fin n → Fin 2) = 0 := by
+  -- slightly awkward because `CharP (Fin n → Fin 2) 2` depends on  `Nonempty (Fin n)`
   obtain hn|hn := isEmpty_or_nonempty (Fin n)
   · simp only [Unique.eq_default]
   · exact CharTwo.two_eq_zero
@@ -99,8 +100,6 @@ def expectation : BooleanFunc n →ₗ[ℝ] ℝ := {
 /-- Expectation of a Boolean function -/
 scoped notation "𝐄" => expectation
 
-lemma expectation_mul_apply : 𝐄 (fun x ↦ (f x) * (g x)) = 𝐄 (f * g) := by rfl
-
 /-- Definition of Walsh character -/
 abbrev walshCharacter (S : Finset (Fin n)) : BooleanFunc n := fun x ↦ ∏ i ∈ S, (-1)^(x i).val
 
@@ -109,8 +108,7 @@ scoped notation "χ" => walshCharacter
 
 lemma walsh_def : χ S x = ∏ i ∈ S, (-1)^(x i).val := by rfl
 
-lemma walsh_ne_zero : χ S x ≠ 0 := by
-  apply prod_ne_zero_iff.mpr; intro i _; simp
+lemma walsh_ne_zero : χ S x ≠ 0 := by apply prod_ne_zero_iff.mpr; intro i _; simp
 
 lemma walsh_eq_neg_one_pow_sum : χ S x = (-1)^∑ i ∈ S, (x i).val := prod_pow_eq_pow_sum _ _ _
 -- or use Finset.cons_induction
@@ -118,11 +116,11 @@ lemma walsh_eq_neg_one_pow_sum : χ S x = (-1)^∑ i ∈ S, (x i).val := prod_po
 /-- Walsh characters are characters. -/
 lemma walsh_add : χ S (x + y) = (χ S x) * (χ S y) := by
   rw [← prod_mul_distrib, prod_congr (by rfl)]
-  have : ∀ v : Fin 2, v = 0 ∨ v = 1 := by omega
+  have (v:Fin 2): v = 0 ∨ v = 1 := by omega
   intro i _
   dsimp
-  obtain ⟨hx|hx, hy|hy⟩ := And.intro (this (x i)) (this (y i))
-    <;> { rw [hx, hy]; simp }
+  obtain ⟨hx|hx, hy|hy⟩ := And.intro (this (x i)) (this (y i)) <;>
+    { rw [hx, hy]; simp }
 
 /-- Dual space of Boolean functions as the type of real-valued functions on `Finset (Fin n)`. -/
 abbrev BooleanFunc' n := Finset (Fin n) → ℝ
@@ -383,8 +381,8 @@ lemma fourier_walsh : 𝓕 (χ S) S' = oneOn (S' = S) := by
 
 /-- Plancherel/Parseval theorem for Boolean functions. -/
 theorem inner_eq_sum_fourier : ⟪f, g⟫ = ∑ S : Finset (Fin n), (𝓕 f S) * (𝓕 g S) := by
-  convert OrthogonalFamily.inner_sum (Orthonormal.orthogonalFamily walsh_orthonormal) _ _ _
-    <;> exact walsh_fourier _
+  convert OrthogonalFamily.inner_sum (Orthonormal.orthogonalFamily walsh_orthonormal) _ _ _ <;>
+    exact walsh_fourier _
 
 /-- Plancherel/Parseval theorem for Boolean functions. -/
 theorem walsh_plancherel : ‖f‖^2 = ∑ S : Finset (Fin n), |𝓕 f S|^2 := by
@@ -437,7 +435,7 @@ lemma walsh_setAt_eq_ite : χ S (setAt i v x) = ite (i ∈ S) ((-1)^v.val * χ (
   have : i ≠ j := by
     by_contra hc
     rw [hc] at h
-    contradiction
+    exact h hj
   rwa [setAt_other]
 
 theorem dderiv_walsh (i : Fin n) (S : Finset (Fin n)) : dderiv i (χ S) = ite (i ∈ S) (χ (S \ {i})) 0 := by
@@ -448,7 +446,7 @@ theorem dderiv_walsh (i : Fin n) (S : Finset (Fin n)) : dderiv i (χ S) = ite (i
   split_ifs with h <;> simp
 
 theorem dderiv_eq_sum_fourier (i : Fin n) (f : BooleanFunc n) : dderiv i f = ∑ S ∈ {S | i ∈ S}, 𝓕 f S•χ (S \ {i}) := by
-  rw (config := {occs := .pos [1]}) [walsh_fourier f]
+  nth_rewrite 1 [walsh_fourier f]
   rw [map_sum, sum_filter, sum_congr (by rfl)]
   intro S _
   rw [map_smul, dderiv_walsh]
@@ -477,19 +475,13 @@ lemma setAt_eq_flipAt (h : x i ≠ v) : setAt i v x = flipAt i x := by
 
 lemma laplace_eq_dderiv (i : Fin n) (f : BooleanFunc n) (x : Fin n → Fin 2):
     laplace i f x = (-1)^(x i).val * (dderiv i f x) := by
-  unfold laplace
-  unfold dderiv
-  dsimp
-  have : x i = 0 ∨ x i ≠ 0 := by tauto
-  cases this with
-  | inl hx =>
-    simp [hx]
-    rw [setAt_eq_id hx]
-    rw [setAt_eq_flipAt]
-    · rw [hx]
-      tauto
-  | inr hx =>
-    have hx1 := Fin.eq_one_of_neq_zero (x i) hx
+  change (f x - _)/2 = (-1)^_ * ( (_ - _)/2 )
+  by_cases hx : x i = 0
+  · simp [hx]
+    rw [setAt_eq_id hx, setAt_eq_flipAt]
+    rw [hx]
+    tauto
+  · have hx1 := Fin.eq_one_of_neq_zero (x i) hx
     rw [setAt_eq_id hx1]
     rw [setAt_eq_flipAt hx]
     simp [hx1]
@@ -506,7 +498,7 @@ theorem laplace_walsh (i : Fin n) (S : Finset (Fin n)) : laplace i (χ S) = ite 
   · simp only [Pi.zero_apply, mul_zero]
 
 theorem laplace_eq_sum_fourier (i : Fin n) (f : BooleanFunc n) : laplace i f = ∑ S ∈ {S | i ∈ S}, 𝓕 f S•χ (S) := by
-  rw (config := {occs := .pos [1]}) [walsh_fourier f]
+  nth_rewrite 1 [walsh_fourier f]
   rw [map_sum, sum_filter, sum_congr (by rfl)]
   intro S _
   rw [map_smul, laplace_walsh]
@@ -519,7 +511,7 @@ theorem influence_eq_sum_fourier (f : BooleanFunc n) (i : Fin n):
     influence f i = ∑ S ∈ {S | i ∈ S}, (𝓕 f S)^2 := by
   unfold influence
   nth_rewrite 1 [laplace_eq_sum_fourier]
-  -- it would be nice to have a tactic that does the following kind of calculation
+  -- todo: simplify
   rw [pow_two, sum_mul_sum]
   rw [map_sum]
   rw [sum_filter]
@@ -529,7 +521,6 @@ theorem influence_eq_sum_fourier (f : BooleanFunc n) (i : Fin n):
       arg 2
       rw [map_sum]
       enter [2, S']
-      -- it would be nice if there was a tactic that does the following automatically
       rw [mul_smul_comm, map_smul, smul_mul_assoc, map_smul]
       rw [← inner_eq_expectation, walsh_inner_eq]
     simp only [smul_eq_mul, mul_ite, mul_one, mul_zero, sum_ite_eq, mem_filter,
@@ -557,6 +548,7 @@ abbrev covariance (f g : BooleanFunc n) : ℝ := 𝐄 (f * g)-𝐄 f * 𝐄 g
 /-- Variance of a Boolean function defined via covariance -/
 abbrev variance (f : BooleanFunc n) : ℝ := covariance f f
 
+-- todo: simplify
 theorem covariance_eq_sum_fourier (f g : BooleanFunc n) : covariance f g = ∑ S ∈ {S : Finset (Fin n) | S.Nonempty}, 𝓕 f S * 𝓕 g S := by
   unfold covariance
   nth_rewrite 1 [walsh_fourier f, walsh_fourier g]
@@ -626,8 +618,7 @@ lemma fourier_eq_zero_iff_fourier_weight_eq {k : ℕ} {f : BooleanFunc n}:
     (∀ S, S.card ≠ k → 𝓕 f S = 0) ↔ fourierWeight k f = ‖f‖^2 := by
   constructor
   · intro h
-    have h : ∀ S, S.card ≠ k → |𝓕 f S|^2 = 0 := by
-      intro S hS; simp; exact h S hS
+    have h : ∀ S, S.card ≠ k → |𝓕 f S|^2 = 0 := by intro S hS; simp; exact h S hS
     symm
     rw [walsh_plancherel]
     calc
@@ -641,7 +632,7 @@ lemma fourier_eq_zero_iff_fourier_weight_eq {k : ℕ} {f : BooleanFunc n}:
     have : ∑ S ∈ {S | S.card ≠ k}, |𝓕 f S|^2 = 0 := by
       symm
       calc
-        0 = ‖f‖^2 - ‖f‖^2                           := by ring
+        0 = ‖f‖^2 - ‖f‖^2                           := (sub_self _).symm
         _ = ∑ S, |𝓕 f S|^2 - fourierWeight k f      := by rw [h, walsh_plancherel]
         _ = ∑ S ∈ {S | S.card = k}, |𝓕 f S|^2 + ∑ S ∈ {S | S.card ≠ k}, |𝓕 f S|^2
           - fourierWeight k f                       := by rw [sum_filter_add_sum_filter_not]
