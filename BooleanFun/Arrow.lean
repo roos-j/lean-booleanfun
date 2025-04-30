@@ -51,16 +51,16 @@ variable {f : BooleanFunc n} [hbv : BooleanValued f]
 abbrev Votes n := Fin n → Fin 2
 
 /-- `±1`-valued majority function -/
-def majority : BooleanFunc n := fun x ↦ if ∑ j, (x j).val > n/2 then 1 else -1
+def majority : BooleanFunc n := fun x ↦ if ∑ j, (x j).val > n / 2 then 1 else -1
 
 /-- The majority function is Boolean valued. -/
-instance : BooleanValued (@majority n) where one_or_neg_one := by {
-  intro x
-  rw [majority.eq_def]
-  split_ifs
-  · left; rfl
-  · right; rfl
-}
+instance : BooleanValued (@majority n) where
+  one_or_neg_one := by
+    intro x
+    rw [majority.eq_def]
+    split_ifs
+    · left; rfl
+    · right; rfl
 
 /-- A dictator is a Walsh character of a singleton set. -/
 abbrev dictator {n : ℕ} (i : Fin n) : BooleanFunc n := χ {i}

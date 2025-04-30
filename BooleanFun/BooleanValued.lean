@@ -39,9 +39,7 @@ lemma eq_one_or_eq_neg_one : ∀ x, f x = 1 ∨ f x = -1 := hbv.one_or_neg_one
 
 lemma norm_sq_eq_one:
     ‖f‖^2 = 1 := by
-  unfold norm instNormBooleanFunc InnerProductSpace.Core.toNorm
-  dsimp
-  change √(𝐄 _)^2 = 1
+  change √(𝐄 _) ^ 2 = 1
   conv in f * f =>
     ext x
     dsimp
@@ -49,13 +47,10 @@ lemma norm_sq_eq_one:
       have : f x * f x = 1 := by
         cases hbv.one_or_neg_one x with | _ => simp [*]
     rw [this]
-  have : (fun _ : Fin n → Fin 2 ↦ (1 : ℝ)) = (1 : BooleanFunc n) := by ext; simp
-  simp [this]
+  simp [expectation]
 
-lemma fourier_eq_one:
-    ∑ S, |𝓕 f S|^2 = 1 := by
-  rw [← walsh_plancherel]
-  exact norm_sq_eq_one
+lemma fourier_eq_one: ∑ S, |𝓕 f S|^2 = 1 := by
+  rw [← walsh_plancherel]; exact norm_sq_eq_one
 
 lemma eq_neg_one_of_ne_one (h' : f x ≠ 1) : f x = -1 :=
   or_iff_not_imp_left.mp (hbv.one_or_neg_one x) h'
@@ -162,8 +157,7 @@ lemma eq_character_of_eq_sum_degree_one (hn : n>0) (hf : ∀ x, f x = ∑ i, �
       let g : BooleanFunc (n + 1) := fun x ↦ f (Fin.insertNth i₀ 0 x)
       have hgeq : g = ∑ i, 𝓕 f {i₀.succAbove i}•χ {i} := by
         ext x
-        simp
-        unfold g
+        simp [g]
         nth_rewrite 1 [hf]
         rw [← sum_erase_add (a := i₀), hFi0zero, zero_mul, add_zero]
         symm
@@ -216,7 +210,7 @@ lemma eq_character_of_eq_sum_degree_one (hn : n>0) (hf : ∀ x, f x = ∑ i, �
             _  = ∑ i ∈ univ.erase i₀, 𝓕 f {i} * (-1)^(x i).val +   0 * (-1)^(update x i₀ 0 i₀).val := by
               rw [hFi0zero]; simp
             _  = ∑ i ∈ univ.erase i₀, 𝓕 f {i} * (-1)^(update x i₀ 0 i).val +   0 * (-1)^(update x i₀ 0 i₀).val := by
-              {congr 1; apply sum_congr (by rfl); intro i hi; apply ne_of_mem_erase at hi; rw [update_noteq hi]}
+              congr 1; apply sum_congr (by rfl); intro i hi; apply ne_of_mem_erase at hi; rw [update_of_ne hi]
             _ = _ := by
               rw [← hFi0zero, sum_erase_add (h := mem_univ i₀), ← hf]
         calc
@@ -263,12 +257,10 @@ lemma oneOn_ne_of_one_or_neg_one {x y : ℝ} (hx : x = 1 ∨ x = -1) (hy : y = 1
   obtain ⟨hx|hx, hy|hy⟩ := And.intro hx hy <;> { rw [hx, hy]; norm_num }
 
 lemma distance_eq : distance f g = 𝐄 (fun x ↦ (1/2) * (1-(f x) * (g x))) := by
-  unfold distance
-  simp_rw [oneOn_ne_of_one_or_neg_one (hbv.one_or_neg_one _) (hbvg.one_or_neg_one _)]
+  simp_rw [distance, oneOn_ne_of_one_or_neg_one (hbv.one_or_neg_one _) (hbvg.one_or_neg_one _)]
 
 lemma inner_eq_distance : ⟪f, g⟫ = 1-2 * distance f g := by
-  rw [distance_eq]
-  unfold expectation
+  rw [distance_eq, expectation]
   dsimp
   rw [← mul_sum, sum_sub_distrib]
   ring_nf
@@ -287,22 +279,20 @@ section BLR
 /-- The BLR test accepts `f` on independently and uniformly chosen `x y` if `(f x) * (f y) = f (x + y)`.
 The acceptance probability is the proportion of inputs `x y` on which the test accepts. -/
 abbrev acceptanceProbabilityBLR (f : BooleanFunc n) : ℝ :=
-  𝐄 $ fun x ↦ 𝐄 $ fun y ↦ oneOn $ (f x) * (f y) = f (x + y)
+  𝐄 <| fun x ↦ 𝐄 <| fun y ↦ oneOn <| (f x) * (f y) = f (x + y)
 
 lemma acceptanceProbabilityBLR_eq : acceptanceProbabilityBLR f =
-    (𝐄 $ fun x ↦ 𝐄 $ fun y ↦ (1/2) * (1 + (f x) * (f y) * (f (x + y)))) := by
+    (𝐄 <| fun x ↦ 𝐄 <| fun y ↦ (1/2) * (1 + (f x) * (f y) * (f (x + y)))) := by
   have hl : ∀ x y, (f x) * (f y) = 1 ∨ (f x) * (f y) = -1 := by
     intro x y
     obtain ⟨hx|hx, hy|hy⟩ := And.intro (hbv.one_or_neg_one x) (hbv.one_or_neg_one y) <;>
       { rw [hx, hy]; simp }
-  unfold acceptanceProbabilityBLR
-  simp_rw [oneOn_eq_of_one_or_neg_one (hl _ _) (hbv.one_or_neg_one _)]
+  simp_rw [acceptanceProbabilityBLR, oneOn_eq_of_one_or_neg_one (hl _ _) (hbv.one_or_neg_one _)]
 
 omit hbv in
--- A "trivial" step in the proof of `almost_character`
--- would be nice if this could be done with very few tactics
-private lemma _aux_lemma : (𝐄 $ fun x ↦ 𝐄 $ fun y ↦ (1/2) * (1 + (f x) * (f y) * (f (x + y))))
-    = (1/2) * (1 + (𝐄 $ fun x ↦ (f x) * (𝐄 $ fun y ↦ (f y) * (f (x + y))))) := by
+/-- A "trivial" step in the proof of `almost_character`. Todo: simplify -/
+private lemma _aux_lemma : (𝐄 <| fun x ↦ 𝐄 <| fun y ↦ (1/2) * (1 + (f x) * (f y) * (f (x + y))))
+    = (1/2) * (1 + (𝐄 <| fun x ↦ (f x) * (𝐄 <| fun y ↦ (f y) * (f (x + y))))) := by
     unfold expectation
     dsimp
     conv => enter [1, 2, 2, x]; rw [← mul_sum, sum_add_distrib, mul_add, mul_add]
@@ -318,16 +308,16 @@ private lemma _aux_lemma : (𝐄 $ fun x ↦ 𝐄 $ fun y ↦ (1/2) * (1 + (f x)
 
 /-- The BLR test can detect that a Boolean valued function is close to being a character.
 See [odonnell2014], Theorem 1.30. -/
-theorem almost_character {ε : ℝ} (h : acceptanceProbabilityBLR f≥1-ε):
+theorem almost_character {ε : ℝ} (h : acceptanceProbabilityBLR f ≥ 1 - ε):
     ∃ S, distance f (χ S) ≤ ε := by
   have : 1-ε ≤ (1/2) * (1 + ∑ S, (𝓕 f S) * (𝓕 f S)^2) := by
     calc
-      _ ≤ acceptanceProbabilityBLR f                                := h
-      _ = (𝐄 $ fun x ↦ 𝐄 $ fun y ↦ (1/2) * (1 + (f x) * (f y) * (f (x + y))))   :=
+      _ ≤ acceptanceProbabilityBLR f := h
+      _ = (𝐄 $ fun x ↦ 𝐄 $ fun y ↦ (1/2) * (1 + (f x) * (f y) * (f (x + y)))) :=
         acceptanceProbabilityBLR_eq
       _ = (1/2) * (1 + (𝐄 $ fun x ↦ (f x) * (𝐄 $ fun y ↦ (f y) * (f (x + y))))) := _aux_lemma
-      _ = (1/2) * (1 + (𝐄 $ fun x ↦ (f x) * (f⋆f) x))                      := rfl
-      _ = (1/2) * (1 + 𝐄 (f * (f⋆f)))                                     := rfl
+      _ = (1/2) * (1 + (𝐄 $ fun x ↦ (f x) * (f⋆f) x)) := rfl
+      _ = (1/2) * (1 + 𝐄 (f * (f⋆f))) := rfl
       _ = (1/2) * (1 + ∑ S, (𝓕 f S) * (𝓕 (f⋆f) S)) := by
         rw [← inner_eq_expectation, inner_eq_sum_fourier]
       _ = _ := by rw [fourier_convolution]; simp_rw [Pi.mul_apply, pow_two]
@@ -343,7 +333,6 @@ theorem almost_character {ε : ℝ} (h : acceptanceProbabilityBLR f≥1-ε):
       _ = _                        := inner_eq_distance
   use S₀
   linarith
-
 
 end BLR
 

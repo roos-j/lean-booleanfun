@@ -11,7 +11,6 @@ import Mathlib.Data.Real.Irrational
 
 /-!
 General lemmas not specific to analysis of Boolean functions.
-These should gradually be removed or converted to `ToMathlib` where appropriate
 -/
 
 namespace BooleanFun
@@ -61,7 +60,7 @@ lemma sum_singletons' [AddCommMonoid α] {F : Finset ι → α}:
 end Singleton
 
 section Ite
--- Basic lemmas for rewriting `ite` expressions -- there must be a better way to do this
+-- Basic lemmas for rewriting `ite` expressions -- todo: remove
 
 variable {α : Sort*} {P : Prop} [Decidable P] {a b c : α}
 
@@ -92,14 +91,14 @@ variable {p q : Prop}
 open Classical
 
 /-- Real-valued `0-1` indicator testing a proposition. We prefer this over using `Set.indicator` and we don't call it
-indicator to avoid ambiguities with Mathlib definitions. -/
+indicator to avoid overloading the Mathlib definition. -/
 abbrev oneOn (p : Prop) : ℝ := ite (h := propDecidable p)  p 1 0
 
 lemma oneOn_true (h : p) : oneOn p = 1 := by simpa
 
 lemma oneOn_false (h : ¬p) : oneOn p = 0 := by simpa
 
-lemma oneOn_and : oneOn (p∧q) = (oneOn p) * (oneOn q) := by
+lemma oneOn_and : oneOn (p ∧ q) = (oneOn p) * (oneOn q) := by
   unfold oneOn; split_ifs <;> {simp; try tauto}
 
 lemma oneOn_not : oneOn (¬p) = 1 - oneOn p := by
@@ -120,7 +119,7 @@ section PowStuff
 
 /-- Solutions of the equation `ρᵏ = ρ` in real numbers. -/
 lemma pow_eq_self_imp {ρ : ℝ} {k : ℕ}:
-    ρ^k = ρ → (k = 1 ∨ ρ = 0 ∨ ρ = 1 ∨ ρ = -1) := by
+    ρ ^ k = ρ → (k = 1 ∨ ρ = 0 ∨ ρ = 1 ∨ ρ = -1) := by
   intro h
   cases k with
   | zero => right; right; left; symm; rwa [pow_zero] at h
