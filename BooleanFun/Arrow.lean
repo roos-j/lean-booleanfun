@@ -80,13 +80,13 @@ def VoteConsistent (x y z : Votes n) : Prop :=
 /-- Commute arguments of `VoteConsistent` predicate -/
 lemma VoteConsistent.comm_right {x y z : Votes n}:
     VoteConsistent x y z = VoteConsistent x z y := by
-  unfold VoteConsistent NAE3; ext
+  apply propext
   constructor <;> { intro h i; specialize h i; push_neg; intro h'; rw [h'] at h; tauto }
 
 /-- Commute arguments of `VoteConsistent` predicate -/
 lemma VoteConsistent.comm_rcyc {x y z : Votes n}:
     VoteConsistent x y z = VoteConsistent y z x := by
-  unfold VoteConsistent NAE3; ext
+  apply propext
   constructor <;> { intro h i; specialize h i; push_neg; intro h'; rw [h'] at h; tauto }
 
 /-- A voting rule is Condorcet, if in every 3-candidate election conducted
@@ -102,10 +102,10 @@ def HasDictator (f : BooleanFunc n) : Prop :=
 def IsUnanimous (f : BooleanFunc n) : Prop := f 0 = 1 ∧ f 1 = -1
 
 /-- The (unique) voting rule for zero voters is not unanimous. -/
-lemma zero_not_unanimous (f : BooleanFunc n) : n = 0 → ¬IsUnanimous f := by
-  unfold IsUnanimous
+lemma zero_not_unanimous (f : BooleanFunc n) (hn : n = 0) : ¬IsUnanimous f := by
+  rw [IsUnanimous]
   push_neg
-  intro hn h
+  intro h
   have : (1 : Fin n → Fin 2) = 0 := by
     rw [hn]; trivial
   rw [this, h]
@@ -115,7 +115,6 @@ lemma zero_not_unanimous (f : BooleanFunc n) : n = 0 → ¬IsUnanimous f := by
 A crucial step in the proof of Arrow's theorem. -/
 lemma oneOn_NAE3_eq {x y z : Fin n → Fin 2}:
     oneOn (NAE3 (f x) (f y) (f z)) = 3/4 - (1/4) * (f x) * (f y) - (1/4) * (f y) * (f z) - (1/4) * (f x) * (f z) := by
-  unfold oneOn NAE3
   obtain ⟨h0|h0, h1|h1, h2|h2⟩ := And.intro (hbv.one_or_neg_one x)
     (And.intro (hbv.one_or_neg_one y) (hbv.one_or_neg_one z)) <;>
       { rw [h0, h1, h2]; norm_num }
@@ -184,24 +183,17 @@ local notation "T" => _Tnae3
 lemma _eq_noise_operator : T = @noise_operator n (-1/3) := by
   apply Basis.ext (b := walsh_basis)
   intro S
-  unfold walsh_basis
-  unfold noise_operator
-  simp only [coe_basisOfOrthonormalOfCardEqFinrank, LinearMap.coe_mk,
-    AddHom.coe_mk]
-  rw [multiplier_walsh]
+  rw [walsh_basis, noise_operator, coe_basisOfOrthonormalOfCardEqFinrank,
+    LinearMap.coe_mk, AddHom.coe_mk, multiplier_walsh]
   funext x
   rw [smul_apply, smul_eq_mul]
   have : ∀ y : Fin n → Fin 2, ∑ z : Fin n → Fin 2, oneOn (VoteConsistent x y z)
       =  ∏ i, (1 + oneOn (x i ≠ y i)) := by
-    -- ∑ z : Fin n → Fin 2, oneOn (VoterPreferencesConsistent x y z)
-    -- = ∑ z : Fin n → Fin 2, ∏ i, oneOn (NAE3 (x i) (y i) (z i))
     intro y
     unfold VoteConsistent
     simp_rw [← oneOn_prod]
-    -- = ∏ i, ∑ v : Fin 2, oneOn (NAE3 (x i) (y i) v)
     rw [← Fintype.prod_sum (f := fun i => fun v => oneOn (NAE3 (x i) (y i) v))]
     suffices ∀ i, ∑ v : Fin 2, oneOn (NAE3 (x i) (y i) v) = (1 + oneOn (x i ≠ y i)) by simp_rw [this]
-    -- for each i, two cases : x i = y i or x i ≠ y i
     intro i
     by_cases h : x i = y i
     · simp [h]
@@ -209,30 +201,23 @@ lemma _eq_noise_operator : T = @noise_operator n (-1/3) := by
       | zero => simp
       | succ k => simp [Fin.fin_one_eq_zero]
     · simp [h]; norm_num
-  -- ∑ y : Fin n → Fin 2, ∏ i ∈ S, (-1)^(y i) * ∏ i, (1 + oneOn (x i ≠ y i))
   conv => enter [1, 2, 2, y]; rw [this, walshCharacter.eq_def]
           enter [1, 1]; rw [← filter_univ_mem (s := S)]
-  -- = ∑ y : Fin n → Fin 2, ∏ i, (-1)^(oneOn (i∈ S) * (y i)) * (1 + oneOn (x i ≠ y i))
   conv => enter [1, 2, 2, y]; rw [prod_filter, ← prod_mul_distrib]
-  -- = ∏ i, ∑ v : Fin 2,  (-1)^(oneOn (i∈ S) * v) * (1 + oneOn (x i ≠ v))
   rw [← Fintype.prod_sum (f := fun i ↦ fun v ↦ (if i ∈ S then (-1)^v.val else 1) * (1 + oneOn (x i ≠ v)))]
-  -- = ∏ i, (-1)^(oneOn (i∈ S) * (x i)) + (-1)^(oneOn (i∈ S) * (1-x i)) * 2
   have haux (w : Fin 2) (g : Fin 2 → ℝ) : ∑ v : Fin 2, g v = g w + g (1-w) := by
     induction w using Fin.cases with -- TODO : tactic macro?
     | zero => simp
     | succ k => simp [Fin.fin_one_eq_zero k]; exact add_comm _ _
   conv => enter [1, 2, 2, i]; rw [haux (x i), oneOn_false (by simp)]
           rw [oneOn_true (by omega), add_zero, mul_one]
-  -- = ∏ i ∈ S, ((-1)^(x i) + 2 * (-1)^(1-x i)) * ∏ i∉S, ..
   rw [← prod_filter_mul_prod_filter_not (p := fun i ↦ i ∈ S), prod_filter, prod_filter]
-  -- first product equals (-1)^S.card * ∏ i ∈ S, (-1)^(x i) = (-1)^S.card * χ S x
   have haux2 (v : Fin 2) : ((-1) : ℝ)^v.val + (-1)^(1-v).val * (1 + 1) = (-1) * (-1)^v.val := by
     induction v using Fin.cases with
     | zero => simp
     | succ k => simp [Fin.fin_one_eq_zero k]
   conv => enter [1, 2, 1, 2, i]; rw [ite_mul, ite_add_ite, ite_ite_same, haux2]
   rw [← prod_filter, filter_univ_mem, prod_mul_distrib, prod_const, ← walsh_def]
-  -- second product equals ∏ i∉S, 3 = 3^(n-S.card)
   conv => enter [1, 2, 2, 2, i]; rw [ite_mul, ite_add_ite, ite_ite_not']; arg 2; norm_num
   rw [← prod_filter, prod_const, filter_univ_not_mem, card_compl, Fintype.card_fin]
   rw [pow_sub₀ _ (by simp) (card_finset_fin_le _)]
@@ -243,20 +228,15 @@ See [odonnell2014], Theorem 2.56. -/
 theorem probabilityCondorcetWinner_eq:
     probabilityCondorcetWinner f = 3/4 * (1- noise_stability (-1/3) f) := by
   simp_rw [probabilityCondorcetWinner.eq_def, oneOn_NAE3_eq, sub_mul, sum_sub_distrib]
-  -- the first sum is just equal to 3/4
   conv => enter [1, 2, 1, 1, 1]; tactic => simp_rw [← mul_sum]
   rw [_triple_sum_oneOn_consistent_eq]
-  -- rewrite fourth sum to equal second
   conv => enter [1, 2, 2, 2, x]; rw [sum_comm]; enter [2, y, 2, z];
           rw [VoteConsistent.comm_right]
-  -- rewrite third sum to equal second
   conv => enter [1, 2, 1, 2]; rw [sum_comm]; enter [2, x]; rw [sum_comm];
           enter [2, y, 2, z]; rw [VoteConsistent.comm_rcyc]
-  -- collect the three sums
   rw [sub_sub, sub_sub, ← two_mul]
   nth_rewrite 1 [← one_mul (∑ x, _)]
   rw [← add_mul]
-  -- take out factor (1/4)
   conv => enter [1, 2, 2, 2, 2, x, 2, y, 2, z]; rw [mul_assoc, mul_assoc]
   conv => enter [1, 2, 2, 2]; tactic => simp_rw [← mul_sum]
   -- rewrite in terms of T and apply main lemma `_eq_noise_operator`

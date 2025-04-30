@@ -52,14 +52,14 @@ in the context of Boolean functions, and the simplicity of working with finite s
 
 namespace BooleanFun
 
-noncomputable section
-
 open Real BigOperators Function Finset Pi
 open RealInnerProductSpace
 
 
 /-- A Boolean function maps an `n`-tuple of bits (of type `Fin n → Fin 2`) to a real number. -/
 abbrev BooleanFunc (n : ℕ) : Type := (Fin n → Fin 2) → ℝ
+
+noncomputable section
 
 variable {α : Type*}
 
@@ -92,7 +92,7 @@ def expectation : BooleanFunc n →ₗ[ℝ] ℝ := {
     ring
   map_smul' := by
     intro c f
-    simp
+    dsimp
     rw [← mul_sum]
     ring
 }
@@ -116,7 +116,7 @@ lemma walsh_eq_neg_one_pow_sum : χ S x = (-1)^∑ i ∈ S, (x i).val := prod_po
 /-- Walsh characters are characters. -/
 lemma walsh_add : χ S (x + y) = (χ S x) * (χ S y) := by
   rw [← prod_mul_distrib, prod_congr (by rfl)]
-  have (v:Fin 2): v = 0 ∨ v = 1 := by omega
+  have (v : Fin 2) : v = 0 ∨ v = 1 := by omega
   intro i _
   dsimp
   obtain ⟨hx|hx, hy|hy⟩ := And.intro (this (x i)) (this (y i)) <;>
@@ -153,7 +153,7 @@ theorem expectation_eq_fourier : 𝐄 f = 𝓕 f ∅ := by
 
 /-- The inner product of two Boolean functions is the expectation of their pointwise product. -/
 
-theorem expectation_prod_self_nonneg : 𝐄 (f * f) ≥ 0 := by
+theorem expectation_prod_self_nonneg : 0 ≤ 𝐄 (f * f) := by
   apply mul_nonneg
   · norm_num
   · apply sum_nonneg
@@ -204,7 +204,7 @@ instance : Norm (BooleanFunc n) := InnerProductSpace.Core.toNorm (𝕜 := ℝ) (
 
 /-- Cauchy-Schwarz inequality on Boolean functions -/
 theorem cauchy_schwarz : |⟪f, g⟫| ≤ ‖f‖ * ‖g‖ :=
-  InnerProductSpace.Core.norm_inner_le_norm (𝕜 := ℝ) (F := BooleanFunc n) f g
+  norm_inner_le_norm (𝕜 := ℝ) f g
 
 lemma walsh_sq_eq_one : (χ S)^2 = 1 := by
   funext x
@@ -216,11 +216,7 @@ lemma walsh_sq_eq_one : (χ S)^2 = 1 := by
 
 @[scoped simp]
 lemma expectation_one : @expectation n 1 = 1 := by
-  unfold expectation
-  simp only [one_div, inv_pow, LinearMap.coe_mk, AddHom.coe_mk, Pi.one_apply, sum_const, card_univ,
-    Fintype.card_pi, Fintype.card_fin, prod_const, nsmul_eq_mul, Nat.cast_pow, Nat.cast_ofNat,
-    mul_one, isUnit_iff_ne_zero, ne_eq, pow_eq_zero_iff', OfNat.ofNat_ne_zero, false_and,
-    not_false_eq_true, IsUnit.inv_mul_cancel]
+  simp [expectation]
 
 lemma norm_sq_eq_inner : ‖f‖^2 = ⟪f, f⟫ := by
   rw [← RCLike.re_to_real (x := ⟪f, f⟫), ← InnerProductSpace.norm_sq_eq_inner]
@@ -242,22 +238,21 @@ theorem walsh_mul_eq : χ S * χ S' = χ (symmDiff S S') := by
   funext x
   unfold walshCharacter
   simp
-  rw (config := {occs := .pos [1]}) [← sdiff_union_inter S S']
-  rw (config := {occs := .pos [3]}) [← sdiff_union_inter S' S]
+  nth_rewrite 1 [← sdiff_union_inter S S']
+  nth_rewrite 3 [← sdiff_union_inter S' S]
   repeat rw [prod_union (disjoint_sdiff_inter _ _)]
   rw [inter_comm S]
   ring_nf
-  have haux : (∏ i ∈ S' ∩ S, ((-1 : ℝ)^(x i).val)) ^ 2 = 1 := by
+  have haux : (∏ i ∈ S' ∩ S, ((-1 : ℝ) ^ (x i).val)) ^ 2 = 1 := by
     rw [← prod_pow]; ring_nf; simp
-  rw [haux, mul_one]
-  rw [← prod_union]
-  rfl
-  rw [disjoint_iff_ne]
-  simp
-  intro a ha _ b hb hb2
-  intro h
-  rw [h] at ha
-  contradiction
+  rw [haux, mul_one, ← prod_union]
+  · rfl
+  · rw [disjoint_iff_ne]
+    simp only [mem_sdiff, ne_eq, and_imp]
+    intro a ha _ b hb hb2
+    intro h
+    rw [h] at ha
+    contradiction
 
 lemma inner_eq_expectation : ⟪f, g⟫ = 𝐄 (f * g) := by rfl
 
@@ -294,9 +289,7 @@ theorem flipAt_bijective {i₀ : Fin n} : Function.Bijective (flipAt i₀) :=
     Function.Involutive.bijective (flipAt_involutive)
 
 theorem expectation_walsh_eq_zero (hS : S.Nonempty) : 𝐄 (χ S) = 0 := by
-  unfold expectation
-  simp
-  unfold walshCharacter
+  simp [expectation, walshCharacter]
   obtain ⟨i₀, hi₀⟩ := hS
   conv =>
     enter [1, 2, x]
@@ -309,21 +302,18 @@ theorem expectation_walsh_eq_zero (hS : S.Nonempty) : 𝐄 (χ S) = 0 := by
       have h : (if x i₀ = 0 then (-1)^(x i₀).val * ∏ x_1 ∈ S.erase i₀, (-1 : ℝ) ^ (x x_1).val else 0 : ℝ) =
       (if x i₀ = 0 then ∏ x_1 ∈ S.erase i₀, (-1 : ℝ) ^ (x x_1).val else 0 : ℝ) := by
         split_ifs with h
-        rw [h]
-        simp
-        rfl
+        · rw [h]; simp
+        · rfl
     rw [h]
   conv =>
     enter [1, 2, 2, x]
     tactic =>
       have h : (if ¬x i₀ = 0 then (-1)^(x i₀).val * ∏ x_1 ∈ S.erase i₀, (-1 : ℝ) ^ (x x_1).val else 0 : ℝ) = (if ¬x i₀ = 0 then -∏ x_1 ∈ S.erase i₀, (-1 : ℝ) ^ (x x_1).val else 0 : ℝ) := by
         split_ifs with h
-        rfl
-        rw [Fin.eq_one_of_neq_zero _ h]
-        simp
+        · rfl
+        · rw [Fin.eq_one_of_neq_zero _ h]; simp
     rw [h]
-  rw [add_eq_zero_iff_eq_neg]
-  rw [← sum_neg_distrib]
+  rw [add_eq_zero_iff_eq_neg, ← sum_neg_distrib]
   symm
   -- Apply flipAt i₀ and use congruence
   rw [← Function.Bijective.sum_comp (flipAt_bijective (i₀ := i₀))]
@@ -331,19 +321,17 @@ theorem expectation_walsh_eq_zero (hS : S.Nonempty) : 𝐄 (χ S) = 0 := by
   intro x _
   simp only [flipAt_flipped, ite_not]
   split_ifs with h1 h2 h3
-  rw [h2, sub_zero] at h1
-  contradiction
-  rw [neg_zero]
-  rw [neg_neg]
-  apply prod_congr (by rfl)
-  intro i hi
-  rw [flipAt_unflipped (h := ne_of_mem_erase hi)]
-  rw [Fin.eq_one_of_neq_zero _ h3] at h1
-  contradiction
+  · rw [h2, sub_zero] at h1; contradiction
+  · rw [neg_zero]
+  · rw [neg_neg]
+    apply prod_congr (by rfl)
+    intro i hi
+    rw [flipAt_unflipped (h := ne_of_mem_erase hi)]
+  · rw [Fin.eq_one_of_neq_zero _ h3] at h1; contradiction
 
 theorem walsh_orthogonal (S S' : Finset (Fin n)) (h : S ≠ S') : ⟪χ S, χ S'⟫ = 0 := by
   change 𝐄 _ = 0
-  simp [walsh_mul_eq]
+  rw [walsh_mul_eq]
   apply expectation_walsh_eq_zero
   by_contra h1
   simp at h1
@@ -353,8 +341,8 @@ theorem walsh_orthogonal (S S' : Finset (Fin n)) (h : S ≠ S') : ⟪χ S, χ S'
 theorem walsh_inner_eq : ⟪χ S, χ S'⟫ = oneOn (S = S') := by
   unfold oneOn
   split_ifs with h
-  rw [← h]
-  exacts [walsh_inner_self_eq_one, walsh_orthogonal S S' h]
+  · rw [← h]; exact walsh_inner_self_eq_one
+  · exact walsh_orthogonal _ _ h
 
 theorem walsh_orthonormal : Orthonormal (ι := Finset (Fin n)) ℝ χ := ⟨walsh_norm_one, walsh_orthogonal⟩
 
@@ -413,30 +401,29 @@ def dderiv (i : Fin n) : BooleanFunc n →ₗ[ℝ] BooleanFunc n := {
   map_smul' := by
     intro c f
     funext x
-    simp
+    dsimp
     ring
 }
 
 lemma walsh_setAt_eq_ite : χ S (setAt i v x) = ite (i ∈ S) ((-1)^v.val * χ (S \ {i}) x) (χ S x) := by
   unfold walshCharacter
   split_ifs with h
-  rw [← mul_prod_erase S _ h]
-  rw [setAt_it]
-  simp
-  rw [erase_eq]
-  apply prod_congr (by rfl)
-  intro j hj
-  rw [setAt_other]
-  simp at hj
-  symm
-  exact hj.right
-  apply prod_congr (by rfl)
-  intro j hj
-  have : i ≠ j := by
-    by_contra hc
-    rw [hc] at h
-    exact h hj
-  rwa [setAt_other]
+  · rw [← mul_prod_erase S _ h, setAt_it]
+    rw [erase_eq]
+    simp
+    apply prod_congr (by rfl)
+    intro j hj
+    rw [setAt_other]
+    simp at hj
+    symm
+    exact hj.right
+  · apply prod_congr (by rfl)
+    intro j hj
+    have : i ≠ j := by
+      by_contra hc
+      rw [hc] at h
+      exact h hj
+    rwa [setAt_other]
 
 theorem dderiv_walsh (i : Fin n) (S : Finset (Fin n)) : dderiv i (χ S) = ite (i ∈ S) (χ (S \ {i})) 0 := by
   funext x
@@ -448,7 +435,7 @@ theorem dderiv_walsh (i : Fin n) (S : Finset (Fin n)) : dderiv i (χ S) = ite (i
 theorem dderiv_eq_sum_fourier (i : Fin n) (f : BooleanFunc n) : dderiv i f = ∑ S ∈ {S | i ∈ S}, 𝓕 f S•χ (S \ {i}) := by
   nth_rewrite 1 [walsh_fourier f]
   rw [map_sum, sum_filter, sum_congr (by rfl)]
-  intro S _
+  intros
   rw [map_smul, dderiv_walsh]
   simp
 
@@ -589,8 +576,7 @@ theorem variance_eq_sum_fourier (f : BooleanFunc n) : variance f = ∑ S ∈ {S 
 /-- L² Poincaré inequality : variance of a Boolean function is ≤ total Influence.
 See [odonnell2014], Sec. 2.3. -/
 theorem variance_le_totalInfluence (f : BooleanFunc n) : variance f ≤ totalInfluence f := by
-  rw [variance_eq_sum_fourier, totalInfluence_eq_sum_fourier]
-  rw [sum_filter]
+  rw [variance_eq_sum_fourier, totalInfluence_eq_sum_fourier, sum_filter]
   gcongr with S
   split_ifs with h
   · nth_rewrite 1 [← one_mul ((𝓕 f S)^2)]
@@ -739,16 +725,11 @@ scoped infixl : 67 "⋆" => convolution
 
 /-- Convolution theorem : the Walsh-Fourier transform turns convolution into pointwise product. -/
 lemma fourier_convolution : 𝓕 (f⋆g) = (𝓕 f) * (𝓕 g) := by
-  -- (1/2)^n * ∑ x, (χ S x) * ( (1/2)^n * ∑ y, (f y) * (g (x + y))   )
   funext S
   unfold fourierTransform convolution expectation
   dsimp
-  -- = ∑ y, ∑ x, (1/2)^n * (1/2)^n * (χ S x) * (f y) * (g (x + y))
   simp_rw [mul_sum]; rw [sum_comm]
-  -- chg var. x ↦ x + y using 2 * y = 0
   conv => enter [1, 2, y]; rw [sum_translate y]
-  -- use character add. property
-  -- (1/2)^n * ∑ y, (1/2)^n * ∑ x, (χ S x) * (χ S y) * (f y) * (g x)
   simp_rw [walsh_add]
   rw [sum_comm]
   -- reorder -- there should be short tactics for these things
