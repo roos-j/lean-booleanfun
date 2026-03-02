@@ -285,47 +285,24 @@ theorem flipAt_involutive {i₀ : Fin n} : Function.Involutive (flipAt i₀) := 
 theorem flipAt_bijective {i₀ : Fin n} : Function.Bijective (flipAt i₀) :=
     Function.Involutive.bijective (flipAt_involutive)
 
--- Todo: simplify
+/-- Expectation of `χ S` is zero if `S` is nonempty -/
 @[simp]
 theorem expectation_walsh_eq_zero (hS : S.Nonempty) : 𝐄 (χ S) = 0 := by
   simp [expectation, walshCharacter]
   obtain ⟨i₀, hi₀⟩ := hS
-  conv =>
-    enter [1, 2, x]
-    rw [← mul_prod_erase (s := S) (a := i₀) (h := (by assumption))]
-  rw [← sum_filter_add_sum_filter_not (p := fun x ↦ x i₀ = 0)]
-  repeat rw [sum_filter]
-  conv =>
-    enter [1, 1, 2, x]
-    tactic =>
-      have h : (if x i₀ = 0 then (-1)^(x i₀).val * ∏ x_1 ∈ S.erase i₀, (-1 : ℝ) ^ (x x_1).val else 0 : ℝ) =
-      (if x i₀ = 0 then ∏ x_1 ∈ S.erase i₀, (-1 : ℝ) ^ (x x_1).val else 0 : ℝ) := by
-        split_ifs with h
-        · rw [h]; simp
-        · rfl
-    rw [h]
-  conv =>
-    enter [1, 2, 2, x]
-    tactic =>
-      have h : (if ¬x i₀ = 0 then (-1)^(x i₀).val * ∏ x_1 ∈ S.erase i₀, (-1 : ℝ) ^ (x x_1).val else 0 : ℝ) = (if ¬x i₀ = 0 then -∏ x_1 ∈ S.erase i₀, (-1 : ℝ) ^ (x x_1).val else 0 : ℝ) := by
-        split_ifs with h
-        · rfl
-        · rw [Fin.eq_one_of_neq_zero _ h]; simp
-    rw [h]
-  rw [add_eq_zero_iff_eq_neg, ← sum_neg_distrib]
-  symm
-  -- Apply flipAt i₀ and use congruence
-  rw [← Function.Bijective.sum_comp (flipAt_bijective (i₀ := i₀))]
-  congr! 1
-  simp only [flipAt_flipped, ite_not]
-  split_ifs with h1 h2 h3
-  · rw [h2, sub_zero] at h1; contradiction
-  · rw [neg_zero]
-  · rw [neg_neg]
-    apply prod_congr (by rfl)
+  let e : (Fin n → Fin 2) ≃ (Fin n → Fin 2) := Equiv.addRight (Pi.single i₀ 1)
+
+  have h_add_one (b : Fin 2) : (-1 : ℝ) ^ (b + 1).val = - ((-1) ^ b.val) := by fin_cases b <;> simp
+
+  have : ∀ x, χ S (e x) = - χ S x := by
+    intro x; unfold walshCharacter e
+    simp [e, Pi.single_apply, ← Finset.prod_erase_mul S _ hi₀, h_add_one (x i₀), mul_neg]
+    apply Finset.prod_congr rfl
     intro i hi
-    rw [flipAt_unflipped (h := ne_of_mem_erase hi)]
-  · rw [Fin.eq_one_of_neq_zero _ h3] at h1; contradiction
+    rw [if_neg (Finset.ne_of_mem_erase hi), add_zero]
+  have h_sum := e.sum_comp (χ S)
+  simp [this] at h_sum
+  linarith [this]
 
 theorem walsh_orthogonal {S S' : Finset (Fin n)} (h : S ≠ S') : ⟪χ S, χ S'⟫ = 0 := by
   change 𝐄 _ = 0
@@ -503,29 +480,10 @@ abbrev covariance (f g : BooleanFunc n) : ℝ := 𝐄 (f * g) - 𝐄 f * 𝐄 g
 /-- Variance of a Boolean function defined via covariance -/
 abbrev variance (f : BooleanFunc n) : ℝ := covariance f f
 
--- todo: simplify
 theorem covariance_eq_sum_fourier (f g : BooleanFunc n) : covariance f g = ∑ S ∈ {S : Finset (Fin n) | S.Nonempty}, 𝓕 f S * 𝓕 g S := by
   unfold covariance
-  nth_rewrite 1 [walsh_fourier f, walsh_fourier g]
-  rw [sum_mul_sum, map_sum]
-  conv =>
-    enter [1, 1, 2, S]
-    rw [map_sum]
-    enter [2, S']
-    rw [mul_smul_comm, map_smul, smul_mul_assoc, map_smul]
-    rw [← inner_eq_expectation, walsh_inner_eq]
-    simp
-  simp
-  rw [← sum_erase_add _ _ (mem_univ ∅), expectation_eq_fourier, expectation_eq_fourier, add_sub_assoc]
-  conv => enter [1, 2]; ring_nf
-  rw [add_zero, sum_congr]
-  · ext -- there should be a lemma in `Finset` for this?
-    constructor
-    · intro h; simp at *
-      exact nonempty_iff_ne_empty.mpr h
-    · intro h; simp at *
-      exact nonempty_iff_ne_empty.mp h
-  · intros; rw [mul_comm]
+  rw [← inner_eq_expectation, inner_eq_sum_fourier]
+  simp [Finset.nonempty_iff_ne_empty, Finset.filter_ne', expectation_eq_fourier]
 
 theorem variance_eq_sum_fourier (f : BooleanFunc n) : variance f = ∑ S ∈ {S : Finset (Fin n) | S.Nonempty}, (𝓕 f S) ^ 2 := by
   convert covariance_eq_sum_fourier f f; exact pow_two _
