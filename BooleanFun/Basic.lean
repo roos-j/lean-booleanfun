@@ -174,21 +174,11 @@ instance : InnerProductSpace.Core ℝ (BooleanFunc n) := {
   smul_left := by
     simp only [Algebra.smul_mul_assoc, map_smul, smul_eq_mul, conj_trivial, implies_true]
   definite := by
-    intro f
-    dsimp
-    unfold expectation
-    simp only [one_div, inv_pow, LinearMap.coe_mk, AddHom.coe_mk, Pi.mul_apply, mul_eq_zero,
-      inv_eq_zero, pow_eq_zero_iff', OfNat.ofNat_ne_zero, ne_eq, false_and, false_or]
-    intro hf
-    ext x
-    rw [Pi.zero_apply]
-    have hff : 0 ≤ f * f := by
-      intro x
-      simp only [Pi.zero_apply, Pi.mul_apply]
-      exact mul_self_nonneg _
-    have := (Fintype.sum_eq_zero_iff_of_nonneg hff).1 hf
-    have := congr_fun this x
-    exact mul_self_eq_zero.1 this
+    intro h; simp [expectation]
+    rw [Finset.sum_eq_zero_iff_of_nonneg]
+    . simp; intro i; ext j; simp [i]
+    . intro i _; apply mul_self_nonneg
+
 }
 
 instance : NormedAddCommGroup (BooleanFunc n) :=
