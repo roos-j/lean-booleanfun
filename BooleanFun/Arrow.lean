@@ -4,7 +4,6 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Joris Roos
 -/
 import BooleanFun.BooleanValued
-import BooleanFun.ToMathlib.Finset
 
 -- set_option profiler true
 
@@ -47,6 +46,11 @@ variable {n : ℕ}
 
 variable {f : BooleanFunc n} [hbv : BooleanValued f]
 
+private lemma filter_univ_not_mem {α : Type*} [Fintype α] [DecidableEq α] (s : Finset α) :
+    univ.filter (· ∉ s) = sᶜ := by
+  ext
+  simp only [mem_filter, mem_univ, true_and, mem_compl]
+
 /-- Encodes votes of `n` voters in a 2-candidate election. -/
 abbrev Votes n := Fin n → Fin 2
 
@@ -81,13 +85,13 @@ def VoteConsistent (x y z : Votes n) : Prop :=
 lemma VoteConsistent.comm_right {x y z : Votes n}:
     VoteConsistent x y z = VoteConsistent x z y := by
   apply propext
-  constructor <;> { intro h i; specialize h i; push_neg; intro h'; rw [h'] at h; tauto }
+  constructor <;> { intro h i; specialize h i; push Not; intro h'; rw [h'] at h; tauto }
 
 /-- Commute arguments of `VoteConsistent` predicate -/
 lemma VoteConsistent.comm_rcyc {x y z : Votes n}:
     VoteConsistent x y z = VoteConsistent y z x := by
   apply propext
-  constructor <;> { intro h i; specialize h i; push_neg; intro h'; rw [h'] at h; tauto }
+  constructor <;> { intro h i; specialize h i; push Not; intro h'; rw [h'] at h; tauto }
 
 /-- A voting rule is Condorcet, if in every 3-candidate election conducted
   using it there is a Condercet winner. -/
@@ -104,7 +108,7 @@ def IsUnanimous (f : BooleanFunc n) : Prop := f 0 = 1 ∧ f 1 = -1
 /-- The (unique) voting rule for zero voters is not unanimous. -/
 lemma zero_not_unanimous (f : BooleanFunc n) (hn : n = 0) : ¬IsUnanimous f := by
   rw [IsUnanimous]
-  push_neg
+  push Not
   intro h
   have : (1 : Fin n → Fin 2) = 0 := by
     rw [hn]; trivial
@@ -163,14 +167,13 @@ private abbrev _Tnae3 : BooleanFunc n →ₗ[ℝ] BooleanFunc n := {
   map_add' := by
     intro f g
     funext x
-    simp only [one_div, inv_pow, add_apply, sum_boole]
+    simp only [one_div, inv_pow, Pi.add_apply, sum_boole]
     conv => enter [1, 2, 2, y]; rw [add_mul]
     rw [sum_add_distrib, mul_add]
   map_smul' := by
     intro c f
     funext x
-    simp only [smul_apply, smul_eq_mul, RingHom.id_apply, add_apply, id_eq, eq_mpr_eq_cast,
-      AddHom.toFun_eq_coe, AddHom.coe_mk]
+    simp only [Pi.smul_apply, smul_eq_mul, RingHom.id_apply]
     conv => enter [1, 2, 2, y]; rw [mul_assoc]
     rw [← mul_sum, ← mul_assoc, mul_comm _ c, mul_assoc]
 }
@@ -181,12 +184,12 @@ local notation "T" => _Tnae3
 /-- One of two crucial steps in the proof of Arrow's theorem:
  the auxiliary linear operator can be expressed in terms of `noise_operator`. -/
 lemma _eq_noise_operator : T = @noise_operator n (-1/3) := by
-  apply Basis.ext (b := walsh_basis)
+  apply Module.Basis.ext (b := walsh_basis)
   intro S
   rw [walsh_basis, noise_operator, coe_basisOfOrthonormalOfCardEqFinrank,
     LinearMap.coe_mk, AddHom.coe_mk, multiplier_walsh]
   funext x
-  rw [smul_apply, smul_eq_mul]
+  rw [Pi.smul_apply, smul_eq_mul]
   have : ∀ y : Fin n → Fin 2, ∑ z : Fin n → Fin 2, oneOn (VoteConsistent x y z)
       =  ∏ i, (1 + oneOn (x i ≠ y i)) := by
     intro y
@@ -222,6 +225,15 @@ lemma _eq_noise_operator : T = @noise_operator n (-1/3) := by
   rw [← prod_filter, prod_const, filter_univ_not_mem, card_compl, Fintype.card_fin]
   rw [pow_sub₀ _ (by simp) (card_finset_fin_le _)]
   field_simp -- todo : speedup
+  have hpow : (1 / 3 : ℝ) ^ n * 3 ^ n = 1 := by
+    rw [← mul_pow]
+    norm_num
+  calc
+    (1 / 3 : ℝ) ^ n * (-1) ^ S.card * 3 ^ n =
+        ((1 / 3 : ℝ) ^ n * 3 ^ n) * (-1) ^ S.card := by ring
+    _ = (-1) ^ S.card := by rw [hpow]; ring
+    _ = (3 * (-(1 / 3 : ℝ))) ^ S.card := by norm_num
+    _ = 3 ^ S.card * (-(1 / 3 : ℝ)) ^ S.card := by rw [mul_pow]
 
 /-- The probability of having a Condorcet winner can be expressed in terms of the noise operator.
 See [odonnell2014], Theorem 2.56. -/
@@ -243,8 +255,8 @@ theorem probabilityCondorcetWinner_eq:
   have : ∑ x, f x * ∑ y, f y * ∑ z, oneOn (VoteConsistent x y z)
       = 6^n * noise_stability (-1/3) f := by
     calc
-      _ = 3^n * (1/3)^n * ∑ x, f x * ∑ y, f y * ∑ z, oneOn (VoteConsistent x y z) := by simp only [mul_ite,
-          mul_one, mul_zero, one_div, inv_pow, isUnit_iff_ne_zero, ne_eq, pow_eq_zero_iff',
+      _ = 3^n * (1/3)^n * ∑ x, f x * ∑ y, f y * ∑ z, oneOn (VoteConsistent x y z) := by simp only [one_div,
+          inv_pow, isUnit_iff_ne_zero, ne_eq, pow_eq_zero_iff',
           OfNat.ofNat_ne_zero, false_and, not_false_eq_true, IsUnit.mul_inv_cancel, one_mul]
       _ = 3^n * ∑ x, f x * T f x := by rw [mul_assoc, mul_sum]; conv => {enter [1, 2, 2, x]; rw [← mul_assoc, mul_comm _ (f x), mul_assoc]}; rfl
       _ = 3^n * 2^n * (1/2)^n * ∑ x, f x * T f x := by simp only [LinearMap.coe_mk, one_div, inv_pow,
@@ -254,7 +266,11 @@ theorem probabilityCondorcetWinner_eq:
       _ = 6^n * ⟪f, T f⟫ := by rw [mul_assoc]; rfl
       _ = 6^n * ⟪f, noise_operator (-1/3) f⟫ := by rw [_eq_noise_operator]
   rw [this]
+  have hpow : (1 / 6 : ℝ) ^ n * 6 ^ n = 1 := by
+    rw [← mul_pow]
+    norm_num
   field_simp -- todo : speedup
+  rw [hpow]
   ring
 
 /-- Arrow's theorem as formulated in [odonnell2014], Sec. 2.5 : Every unanimous voting rule that always admits a Condorcet winner is a dictatorship. -/

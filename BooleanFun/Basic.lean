@@ -3,8 +3,7 @@ Copyright (c) 2024 Joris Roos. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Joris Roos
 -/
-import BooleanFun.AuxLemmas
-import BooleanFun.ToMathlib.Finset
+import BooleanFun.Auxiliary
 
 import Mathlib.Analysis.InnerProductSpace.PiL2
 import Mathlib.Algebra.CharP.Pi
@@ -66,20 +65,22 @@ variable {α : Type*}
 variable {n : ℕ} {f g : BooleanFunc n} {x y : Fin n → Fin 2} {i : Fin n}
 variable {S S' : Finset (Fin n)} {v : Fin 2}
 
-lemma two_eq_zero : (2 : Fin n → Fin 2) = 0 := by
-  -- slightly awkward because `CharP (Fin n → Fin 2) 2` depends on  `Nonempty (Fin n)`
-  obtain hn|hn := isEmpty_or_nonempty (Fin n)
-  · simp only [Unique.eq_default]
-  · exact CharTwo.two_eq_zero
-
 /-- Translation invariance -/
 lemma sum_translate (a : Fin n → Fin 2) : ∑ x, f x = ∑ x, f (x + a) := by
   apply sum_bijective (fun x ↦ x + a)
   · constructor
     · intro x y; simp
-    · intro y; use y + a; abel_nf; simp [two_eq_zero]
+    · intro y
+      use y + a
+      ext i
+      simp only [Pi.add_apply]
+      omega
   · simp
-  · intro i _; abel_nf; simp [two_eq_zero]
+  · intro i _
+    congr 1
+    ext j
+    simp only [Pi.add_apply]
+    omega
 
 /-- The expectation of a Boolean function is its average value with respect to the uniform
 probability measure on `Fin n → Fin 2`. -/
@@ -163,11 +164,11 @@ theorem expectation_prod_self_nonneg : 0 ≤ 𝐄 (f * f) := by
 /-- Boolean functions form an inner product space. -/
 instance : InnerProductSpace.Core ℝ (BooleanFunc n) := {
   inner := fun f g ↦ 𝐄 (f * g)
-  conj_symm := by
+  conj_inner_symm := by
     intros f g
     simp only [conj_trivial]
     rw [mul_comm]
-  nonneg_re := by
+  re_inner_nonneg := by
     intro f
     simp only [RCLike.re_to_real, expectation_prod_self_nonneg]
   add_left := by simp only [add_mul, map_add, implies_true]
@@ -188,7 +189,7 @@ instance : SeminormedAddCommGroup (BooleanFunc n) :=
   instNormedAddCommGroupBooleanFunc.toSeminormedAddCommGroup
 
 instance : InnerProductSpace ℝ (BooleanFunc n) :=
-  InnerProductSpace.ofCore instCoreRealBooleanFunc
+  InnerProductSpace.ofCore (inferInstance : PreInnerProductSpace.Core ℝ (BooleanFunc n))
 
 instance : Norm (BooleanFunc n) := InnerProductSpace.Core.toNorm (𝕜 := ℝ) (F := BooleanFunc n)
 
@@ -209,12 +210,13 @@ lemma walsh_sq_eq_one : (χ S) ^ 2 = 1 := by
 lemma expectation_one : @expectation n 1 = 1 := by simp [expectation]
 
 lemma norm_sq_eq_inner : ‖f‖ ^ 2 = ⟪f, f⟫ := by
-  rw [← RCLike.re_to_real (x := ⟪f, f⟫), ← InnerProductSpace.norm_sq_eq_inner]
+  simpa only [RCLike.re_to_real] using
+    (InnerProductSpace.norm_sq_eq_re_inner (𝕜 := ℝ) f)
 
 /-- Walsh characters are L² normalized. -/
 @[simp]
 theorem walsh_norm_one (S : Finset (Fin n)) : ‖χ S‖ = 1 := by
-  simp only [norm_eq_sqrt_inner (𝕜 := ℝ), sqrt_eq_one]
+  simp only [norm_eq_sqrt_real_inner, sqrt_eq_one]
   change 𝐄 _ = 1
   rw [← pow_two, walsh_sq_eq_one]
   simp
@@ -286,10 +288,10 @@ theorem expectation_walsh_eq_zero (hS : S.Nonempty) : 𝐄 (χ S) = 0 := by
 
   have : ∀ x, χ S (e x) = - χ S x := by
     intro x; unfold walshCharacter e
-    simp [e, Pi.single_apply, ← Finset.prod_erase_mul S _ hi₀, h_add_one (x i₀), mul_neg]
+    simp [Pi.single_apply, ← Finset.prod_erase_mul S _ hi₀, h_add_one (x i₀), mul_neg]
     apply Finset.prod_congr rfl
     intro i hi
-    rw [if_neg (Finset.ne_of_mem_erase hi), add_zero]
+    rw [ite_eq_right (Finset.ne_of_mem_erase hi), add_zero]
   have h_sum := e.sum_comp (χ S)
   simp [this] at h_sum
   linarith [this]
@@ -311,13 +313,17 @@ theorem walsh_inner_eq : ⟪χ S, χ S'⟫ = oneOn (S = S') := by
 theorem walsh_orthonormal : Orthonormal (ι := Finset (Fin n)) ℝ χ := ⟨walsh_norm_one, @walsh_orthogonal _⟩
 
 /-- Basis of Walsh characters on `BooleanFunc n`. -/
-abbrev walsh_basis : Basis (ι := Finset (Fin n)) ℝ (BooleanFunc n) :=
+abbrev walsh_basis : Module.Basis (ι := Finset (Fin n)) ℝ (BooleanFunc n) :=
   basisOfOrthonormalOfCardEqFinrank (v := χ) walsh_orthonormal (by simp)
 
 /-- Orthonormal basis of Walsh characters on `BooleanFunc n`. -/
 abbrev walsh_orthonormal_basis : OrthonormalBasis (ι := Finset (Fin n)) ℝ (BooleanFunc n) :=
-  Basis.toOrthonormalBasis (basisOfOrthonormalOfCardEqFinrank (v := χ) walsh_orthonormal (by simp))
+  Module.Basis.toOrthonormalBasis (basisOfOrthonormalOfCardEqFinrank (v := χ) walsh_orthonormal (by simp))
     (by simp [walsh_orthonormal])
+
+@[simp]
+lemma walsh_orthonormal_basis_apply (T : Finset (Fin n)) : walsh_orthonormal_basis T = χ T := by
+  simp [walsh_orthonormal_basis]
 
 -- Q : Why does this not work:
 -- def walsh_orthonormal_basis' : OrthonormalBasis (ι := Finset (Fin n)) ℝ (BooleanFunc n) :=
@@ -330,8 +336,12 @@ lemma fourier_walsh : 𝓕 (χ S) S' = oneOn (S' = S) := walsh_inner_eq
 
 /-- Plancherel/Parseval theorem for Boolean functions. -/
 theorem inner_eq_sum_fourier : ⟪f, g⟫ = ∑ S : Finset (Fin n), (𝓕 f S) * (𝓕 g S) := by
-  convert OrthogonalFamily.inner_sum (Orthonormal.orthogonalFamily walsh_orthonormal) _ _ _ <;>
-    exact walsh_fourier _
+  rw [← walsh_orthonormal_basis.sum_inner_mul_inner f g]
+  apply Finset.sum_congr rfl
+  intro S _
+  rw [walsh_orthonormal_basis_apply S, real_inner_comm (χ S) f,
+    ← fourier_eq_inner (f := f) (S := S),
+    ← fourier_eq_inner (f := g) (S := S)]
 
 /-- Plancherel/Parseval theorem for Boolean functions. -/
 theorem walsh_plancherel : ‖f‖^2 = ∑ S : Finset (Fin n), |𝓕 f S|^2 := by
@@ -412,7 +422,7 @@ lemma laplace_eq_dderiv (i : Fin n) (f : BooleanFunc n) (x : Fin n → Fin 2):
   by_cases hx : x i = 0
   · simp [hx]
     rw [setAt_eq_id hx, setAt_eq_flipAt (by rw [hx]; trivial)]
-  · have hx1 := Fin.eq_one_of_neq_zero (x i) hx
+  · have hx1 := Fin.eq_one_of_ne_zero (x i) hx
     rw [setAt_eq_id hx1, setAt_eq_flipAt hx]
     simp [hx1]; ring
 
@@ -551,7 +561,7 @@ lemma eq_sum_fourier_of_fourier_weight {k : ℕ} {f : BooleanFunc n} (h : fourie
 lemma eq_sum_degree_one_of_fourier_weight_one {f : BooleanFunc n} (h : fourierWeight 1 f = ‖f‖ ^ 2) :
     ∀ x, f x = ∑ i, 𝓕 f {i} * (-1)^(x i).val := by
   intro
-  nth_rewrite 1 [eq_sum_fourier_of_fourier_weight h, sum_apply]
+  nth_rewrite 1 [eq_sum_fourier_of_fourier_weight h, Finset.sum_apply]
   apply sum_singletons
   intro
   simp only [Pi.smul_apply, prod_singleton, smul_eq_mul]
@@ -569,14 +579,14 @@ def multiplier (m : ℕ → ℝ) : BooleanFunc n →ₗ[ℝ] BooleanFunc n := {
   toFun := fun f ↦ ∑ S : Finset (Fin n), (m S.card) • 𝓕 f S • χ S
   map_add' := by
     intros; ext; dsimp
-    repeat rw [sum_apply]
+    repeat rw [Finset.sum_apply]
     rw [← sum_add_distrib, sum_congr (by rfl)]
     intros
     simp only [map_add, Pi.add_apply, Pi.smul_apply, smul_eq_mul]
     ring
   map_smul' := by
     intros; ext
-    simp only [map_smul, Pi.smul_apply, smul_eq_mul, sum_apply, RingHom.id_apply, mul_sum]
+    simp only [map_smul, Pi.smul_apply, smul_eq_mul, Finset.sum_apply, RingHom.id_apply, mul_sum]
     congr! 1; ring
 }
 
@@ -621,7 +631,9 @@ infixl : 67 "⋆" => convolution
 /-- Convolution theorem : the Walsh-Fourier transform turns convolution into pointwise product. -/
 lemma fourier_convolution : 𝓕 (f ⋆ g) = (𝓕 f) * (𝓕 g) := by
   funext S
-  unfold fourierTransform convolution expectation
+  change expectation (walshCharacter S * convolution f g) =
+    expectation (walshCharacter S * f) * expectation (walshCharacter S * g)
+  unfold convolution expectation
   dsimp
   simp_rw [mul_sum]; rw [sum_comm]
   conv => enter [1, 2, y]; rw [sum_translate y]
@@ -634,7 +646,11 @@ lemma fourier_convolution : 𝓕 (f ⋆ g) = (𝓕 f) * (𝓕 g) := by
   apply sum_congr (by rfl)
   intro x _
   ring_nf
-  rw [two_eq_zero, mul_zero, add_zero]
+  have hxy : y + x + x = y := by
+    ext i
+    simp only [Pi.add_apply]
+    omega
+  rw [hxy]
 
 end Convolution
 

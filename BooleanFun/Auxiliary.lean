@@ -5,12 +5,12 @@ Authors: Joris Roos
 -/
 import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 import Mathlib.Algebra.BigOperators.Finprod
-import Mathlib.Data.Real.Irrational
+import Mathlib.Analysis.Real.Sqrt
 
 -- set_option profiler true
 
 /-!
-General lemmas not specific to analysis of Boolean functions.
+Auxiliary lemmas not specific to analysis of Boolean functions.
 -/
 
 namespace BooleanFun
@@ -108,7 +108,7 @@ lemma oneOn_prod {p : ι → Prop} : ∏ i, oneOn (p i) = oneOn (∀ i, p i) := 
   unfold oneOn
   split_ifs with h
   · simp [h]
-  · push_neg at h
+  · push Not at h
     obtain ⟨i, hi⟩ := h
     rw [← Finset.prod_erase_mul (a := i) (s := Finset.univ) (h := Finset.mem_univ i)]
     simp [hi]
@@ -130,7 +130,7 @@ lemma pow_eq_self_imp {ρ : ℝ} {k : ℕ}:
       nth_rewrite 3 [← one_mul ρ] at h
       have h := mul_right_cancel₀ hρ h
       obtain h'|h'|⟨h', _⟩ := pow_eq_one_iff_cases.mp h
-      · left; rwa [add_left_eq_self]
+      · left; simp [h']
       · right; right; left; assumption
       · right; right; right; assumption
 

@@ -58,7 +58,7 @@ lemma eq_neg_one_of_ne_one (h' : f x ≠ 1) : f x = -1 :=
 lemma eq_one_of_ne_neg_one (h' : f x ≠ -1) : f x = 1 :=
   or_iff_not_imp_right.mp (hbv.one_or_neg_one x) h'
 
-instance neg_boolean_valued [hbv : BooleanValued f] : BooleanValued (-f) where
+instance neg_boolean_valued : BooleanValued (-f) where
   one_or_neg_one := by intro x; rw [Pi.neg_apply, neg_inj, neg_eq_iff_eq_neg, or_comm]; exact hbv.one_or_neg_one _
 
 /-- Walsh characters are Boolean valued -/
@@ -168,7 +168,6 @@ lemma eq_character_of_eq_sum_degree_one (hn : n>0) (hf : ∀ x, f x = ∑ i, �
         · unfold Set.MapsTo
           intro i _
           simp
-          apply succAbove_ne i₀
         · intro i hi0 hi1
           simp at hi1
           simp at hi0
@@ -186,7 +185,7 @@ lemma eq_character_of_eq_sum_degree_one (hn : n>0) (hf : ∀ x, f x = ∑ i, �
           _ = 𝓕 f {i₀.succAbove i}                     := by
             (conv => enter [1, 2, i']; rw [walsh_inner_eq]); simp
       have hgeq' : ∀ x, g x = ∑ i, 𝓕 g {i} * (-1)^(x i).val := by
-        intro x; nth_rewrite 1 [hgeq]; rw [sum_apply]; apply sum_congr (by rfl); intro i _; simp [this]
+        intro x; nth_rewrite 1 [hgeq]; rw [Finset.sum_apply]; apply sum_congr (by rfl); intro i _; simp [this]
       have : g 0 = 1 := by unfold g; simp; exact hf1
       have : BooleanValued g := BooleanValued.mk
         (by intro x; exact hbv.one_or_neg_one (Fin.insertNth i₀ 0 x))
