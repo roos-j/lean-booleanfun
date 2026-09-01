@@ -1,0 +1,141 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/mathlib-initiative/formalization.yaml/main/schema/formalization.schema.json
+# formalization.yaml (v0.4): repo-root metadata for formalization projects.
+# Requiredness/conformance:
+#   - Fields marked [required] should be present and filled.
+#   - Fields not marked [required] are examples/recommended metadata only; they may be omitted.
+#   - Projects may add extra YAML keys at any level. Readers should tolerate unknown keys.
+# This is a lightweight reporting schema, not a closed validation schema.
+#
+# This file was copied from the template at `https://github.com/mathlib-initiative/formalization.yaml`
+# and then filled in by the author.
+
+version: "v0.4"
+
+# project - the formalization itself (not the source).
+project:
+  name: "Arrow's theorem via Fourier analysis"                     # [required]
+  description: >-
+    This is a formalization in Lean 4 of Arrow's theorem for three-candidate elections
+    as stated in Ryan O'Donnell's book "Analysis of Boolean Functions", Sec. 2.5, with
+    a single voting rule applied to every pairwise election.
+    The theorem states that every unanimous voting rule that always admits a Condorcet winner 
+    must be a dictatorship, i.e. there must exist a voter that alone determines the outcome.
+    Here voting rules are encoded by Boolean-valued functions on the Hamming cube.
+    The proof follows the exposition given there, which is based on Gil Kalai's
+    Fourier-analytic argument using the Walsh-Fourier transform. The version stated in the book 
+    and formalized here is not the most general version of Arrow's theorem: for example,
+    one may allow more than three candidates, or that the voting rules for each pairwise
+    election are different. This formalization was entirely human-written.
+
+  authors: 
+    - "Joris Roos"                  # [required] who did the formalization
+  responsible_maintainers: 
+    - "Joris Roos"  # people responsible for the formalization repository
+  license: "Apache-2.0"                  # [required]
+
+# sources - what was formalized. Sources may be articles, books, web posts,
+# folklore, conversations, or anything else; no arXiv record is assumed. For a
+# theorem first presented by this formalization, use type: "original-proof".
+sources:                       # [required] list of sources or an original proof
+  - title: "Analysis of Boolean Functions"                  # [required per source] title or short description
+    authors: 
+      - "Ryan O'Donnell"                # optional bibliographic authors; may be unknown or inapplicable
+    id: "doi:10.1017/CBO9781139814782"                     # optional URL, DOI, ISBN, arXiv ID, citation, etc.
+    type: "book"                   # article, book, web post, folklore, conversation, original-proof, ...
+    location: "Section 2.5, Arrow's Theorem"               # theorem/section/page/post/answer or other locator
+    relationship: "formalizes"           # formalizes | adapts | independently-proves | background | other
+    note: "Cambridge University Press, 2014"
+    author_endorsement: "not-contacted"     # participated | endorsed | no-response | not-contacted | declined | n/a | other
+
+  - title: "A Fourier-Theoretic Perspective on the Condorcet Paradox and Arrow's Theorem" # [required per source] title or short description
+    authors: 
+      - "Gil Kalai"                # optional bibliographic authors; may be unknown or inapplicable
+    id: "doi:10.1016/S0196-8858(02)00023-4"                     # optional URL, DOI, ISBN, arXiv ID, citation, etc.
+    type: "paper"                   # article, book, web post, folklore, conversation, original-proof, ...
+    note: "Advances in Applied Mathematics 29(3) (October 2002), pp. 412-426"
+    relationship: "background"           # formalizes | adapts | independently-proves | background | other
+
+  - title: "A Difficulty in the Concept of Social Welfare" # [required per source] title or short description
+    authors: 
+      - "Kenneth J. Arrow"                # optional bibliographic authors; may be unknown or inapplicable
+    id: "doi:10.1086/256963"                     # optional URL, DOI, ISBN, arXiv ID, citation, etc.
+    type: "paper"                   # article, book, web post, folklore, conversation, original-proof, ...
+    note: "Journal of Political Economy 58(4) (August 1950), pp. 328-346"
+    relationship: "background"           # formalizes | adapts | independently-proves | background | other
+
+
+# related_formalizations - prior or parallel formalizations, if known.
+related_formalizations:
+  - id: "https://mizar.uwb.edu.pl/version/current/html/arrow.html"
+    relationship: "independent"
+    note: >-
+      Freek Wiedijk's Mizar formalization following Geanakoplos's first direct combinatorial proof.
+  - id: "https://isa-afp.org/entries/ArrowImpossibilityGS.html"
+    relationship: "independent"
+    note: >-
+      Tobias Nipkow's Isabelle/HOL development using Geanakoplos-based proofs.
+  - id: "https://github.com/asouther4/lean-social-choice"
+    relationship: "independent"
+    note: >-
+      Andrew Souther and Benjamin Davidson's Lean 3 social-choice development,
+      also using Geanakoplos's proof. 
+
+# classification - what area of mathematics the formalized result belongs to.
+# Optional, but it is the only part of this file that lets a reader find the
+# project by subject rather than by name. Use the identifiers from the official
+# arXiv taxonomy (https://arxiv.org/category_taxonomy) and MSC2020
+# (https://msc2020.org/); list as many or as few of each as apply.
+classification:
+  arxiv: ["cs.DM"]                    # e.g. ["math.NT", "math.CO"]
+  msc2020: ["68R01"]                  # e.g. ["11N25", "05C35"]
+
+# project status
+status:
+  scope: >-
+    The scope is to prove Arrow's theorem in the formulation of Ryan O'Donnell's book in Section 2.5.
+    This is a three-candidate version of the theorem using a single voting rule applied to every pairwise election.
+    There are more general versions of Arrow's theorem in the literature and we do not claim
+    to have formalized any of those in the present submission.   
+  # Count unresolved proof-development sorries only. Exclude the deliberate
+  # placeholder sorry in a Comparator challenge module.
+  sorry_count: 0
+  # Likewise, count only unresolved sorries in proof-development definitions,
+  # not deliberate definition holes in Comparator challenge modules.
+  sorry_in_definitions: 0
+  axioms: ["propext", "Quot.sound", "Classical.choice"] # list all axioms used (including standard axioms such as `Quot.sound`)
+  main_results:                # list the main results of the project
+  - declaration: "BooleanFun.BV.dictator_of_condorcet_and_unanimous"            # declaration proving this main result
+    file: "BooleanFun/Arrow.lean"                   # file containing the declaration
+    # Count unresolved sorries in the proved declaration, not the deliberate
+    # placeholder in its Comparator challenge module.
+    sorry_count: 0
+    comparator_config: "comparator.json"      # path to the comparator (leanprover/comparator) JSON config that verifies this result
+
+# how it was produced. Extra per-entry fields are allowed.
+automation:                    # [required]
+  methods:                     # [required] one entry per distinct phase/run/tool
+    - method: "manual"               # [required] manual | copilot | agent | autonomous | other
+  notes: >-
+    This project was entirely human-generated, with most of the code written
+    in Fall 2024, when publicly available coding agents were not very useful yet
+    for Lean formalization.
+
+# fidelity
+fidelity:
+  divergences: >-
+    No known mathematical divergence from the theorem stated in Ryan O'Donnell's book, Section 2.5.
+
+# review status
+review:
+  status: "self-assessed"                   # [required] unchecked | agent-reviewed | self-assessed | peer-reviewed | author-verified | other/freeform
+  reviewers:
+    - "Joris Roos"
+  notes: >-
+    The mathematical statement matches the Lean formalized statement. The Lean formalization
+    was hand-written by the formalization author based on the informal argument contained in the source.
+    The theorem builds in Lean, depending only on the specified standard axioms.
+    A local Comparator check also passed. This is not a claim of an independent review.
+    The review was conducted by the author of this formalization.
+
+# acknowledgements - optional credits for libraries, tools, discussions, etc.
+acknowledgements: "This project would not have been possible without the Lean 4 and mathlib4 projects."

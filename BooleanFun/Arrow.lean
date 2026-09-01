@@ -23,10 +23,11 @@ so we unpack most of the probability language in the proof.
 This is mainly facilitated by introducing an auxiliary linear operator, see `_Tnae3`.
 
 ## References
-* [K. Arrow, *A difficulty in the concept of social welfare*][arrow1950]
+* [R. O'Donnell, *Analysis of Boolean functions*, Cambridge University Press, 2014][odonnell2014]
 * [G. Kalai, *A Fourier-theoretic perspective on the Condorcet paradox and Arrow's
-theorem*][kalai2002]
-* [R. O'Donnell, *Analysis of Boolean functions*][odonnell2014]
+  theorem*, Advances in Applied Mathematics 29(3) (October 2002), pp. 412-426][kalai2002]
+* [K. Arrow, *A difficulty in the concept of social welfare*,
+  Journal of Political Economy 58(4) (August 1950), pp. 328-346][arrow1950]
 
 ## Extensions?
 * Allow different voting rules for each pairwise election
