@@ -1,7 +1,5 @@
 name = "BooleanFun"
-version = "0.1.0"
-keywords = ["math"]
-defaultTargets = ["BooleanFun"]
+defaultTargets = ["Challenge", "Solution"]
 
 [leanOptions]
 pp.unicode.fun = true # pretty-prints `fun a ↦ b`
@@ -13,3 +11,9 @@ scope = "leanprover-community"
 
 [[lean_lib]]
 name = "BooleanFun"
+
+[[lean_lib]]
+name = "Challenge"
+
+[[lean_lib]]
+name = "Solution"
