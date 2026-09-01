@@ -10,7 +10,7 @@ import BooleanFun.Basic
 /-!
 # Boolean valued functions
 
-This file introduces a typeclass `BooleanValued` for Boolean functions only taking values `±1`
+This file introduces the predicate `BooleanValued` for Boolean functions only taking values `±1`
 and proves some basic properties specific to Boolean-valued functions.
 
 ## Main results
@@ -28,16 +28,15 @@ open BooleanFun Finset Function Fin RealInnerProductSpace
 variable {n : ℕ} {f g : BooleanFunc n} {x : Fin n → Fin 2}
 
 /-- `BooleanValued f` bundles a proof that `f` takes values `±1`. -/
-class BooleanValued (f : BooleanFunc n) : Prop where
+structure BooleanValued (f : BooleanFunc n) : Prop where
   one_or_neg_one : ∀ x, f x = 1 ∨ f x = -1
 
 namespace BV
 
-variable [hbv : BooleanValued f] [hbvg : BooleanValued g]
+lemma eq_one_or_eq_neg_one (hbv : BooleanValued f) : ∀ x, f x = 1 ∨ f x = -1 :=
+  hbv.one_or_neg_one
 
-lemma eq_one_or_eq_neg_one : ∀ x, f x = 1 ∨ f x = -1 := hbv.one_or_neg_one
-
-lemma norm_sq_eq_one:
+lemma norm_sq_eq_one (hbv : BooleanValued f):
     ‖f‖^2 = 1 := by
   change √(𝐄 _) ^ 2 = 1
   conv in f * f =>
@@ -49,20 +48,21 @@ lemma norm_sq_eq_one:
     rw [this]
   simp [expectation]
 
-lemma fourier_eq_one: ∑ S, |𝓕 f S|^2 = 1 := by
-  rw [← walsh_plancherel]; exact norm_sq_eq_one
+lemma fourier_eq_one (hbv : BooleanValued f) : ∑ S, |𝓕 f S|^2 = 1 := by
+  rw [← walsh_plancherel]
+  exact norm_sq_eq_one hbv
 
-lemma eq_neg_one_of_ne_one (h' : f x ≠ 1) : f x = -1 :=
+lemma eq_neg_one_of_ne_one (hbv : BooleanValued f) (h' : f x ≠ 1) : f x = -1 :=
   or_iff_not_imp_left.mp (hbv.one_or_neg_one x) h'
 
-lemma eq_one_of_ne_neg_one (h' : f x ≠ -1) : f x = 1 :=
+lemma eq_one_of_ne_neg_one (hbv : BooleanValued f) (h' : f x ≠ -1) : f x = 1 :=
   or_iff_not_imp_right.mp (hbv.one_or_neg_one x) h'
 
-instance neg_boolean_valued : BooleanValued (-f) where
+lemma neg_boolean_valued (hbv : BooleanValued f) : BooleanValued (-f) where
   one_or_neg_one := by intro x; rw [Pi.neg_apply, neg_inj, neg_eq_iff_eq_neg, or_comm]; exact hbv.one_or_neg_one _
 
-/-- Walsh characters are Boolean valued -/
-instance (S : Finset (Fin n)) : BooleanValued (χ S) where
+/-- Walsh characters are Boolean valued. -/
+lemma walsh_boolean_valued (S : Finset (Fin n)) : BooleanValued (χ S) where
     one_or_neg_one := by simp_rw [walsh_eq_neg_one_pow_sum, neg_one_pow_eq_or _, implies_true]
 
 section DegreeOne
@@ -70,16 +70,18 @@ section DegreeOne
 /-- A Boolean valued function that is a linear combination of degree one characters must be constant
 times a degree one character.
 Most involved step towards `eq_character_of_fourier_weight_one_eq_one`. -/
--- Unfortunately a bit lengthy
-lemma eq_character_of_eq_sum_degree_one (hn : n>0) (hf : ∀ x, f x = ∑ i, 𝓕 f {i} * (-1)^(x i).val):
+lemma eq_character_of_eq_sum_degree_one (hbv : BooleanValued f) (hn : n>0)
+    (hf : ∀ x, f x = ∑ i, 𝓕 f {i} * (-1)^(x i).val):
     ∃ S ∈ {S|S.card = 1}, ∃ c : ℝ, f = c•χ S := by
+-- Unfortunately a bit lengthy
   wlog hf1 : f 0 = 1 with h1
   { -- replace f by -f
     -- have h' : IsBooleanValued (-f) := neg_is_boolean_valued (h := h)
     have hf' : ∀ x, (-f) x = ∑ i, 𝓕 (-f) {i} * (-1)^(x i).val := by intro x; simp; exact hf x
     have : (-f) 0 = 1 := by
-      rw [Pi.neg_apply, neg_eq_iff_eq_neg]; exact eq_neg_one_of_ne_one hf1
-    specialize h1 hn hf' this
+      rw [Pi.neg_apply, neg_eq_iff_eq_neg]
+      exact eq_neg_one_of_ne_one hbv hf1
+    specialize h1 (neg_boolean_valued hbv) hn hf' this
     obtain ⟨S, hS0, hS1⟩ := h1
     obtain ⟨c, hc⟩ := hS1
     use S
@@ -125,7 +127,8 @@ lemma eq_character_of_eq_sum_degree_one (hn : n>0) (hf : ∀ x, f x = ∑ i, �
       have : ∃ i₀, f (flipAt i₀ 0) = 1 := by
         by_contra hc -- suppose not
         have hfm1 : ∀i, f (flipAt i 0) = -1 := by
-          intro i; exact eq_neg_one_of_ne_one ((not_exists.mp hc) i)
+          intro i
+          exact eq_neg_one_of_ne_one hbv ((not_exists.mp hc) i)
         have : ∀ i, 𝓕 f {i} = 1 := by
           intro i; symm
           calc
@@ -189,7 +192,7 @@ lemma eq_character_of_eq_sum_degree_one (hn : n>0) (hf : ∀ x, f x = ∑ i, �
       have : g 0 = 1 := by unfold g; simp; exact hf1
       have : BooleanValued g := BooleanValued.mk
         (by intro x; exact hbv.one_or_neg_one (Fin.insertNth i₀ 0 x))
-      have := hi (f := g) (Nat.succ_pos n) (by assumption) (by assumption)
+      have := hi (f := g) this (Nat.succ_pos n) (by assumption) (by assumption)
       obtain ⟨S, hS1, hS2⟩ := this
       obtain ⟨c, hc⟩ := hS2
       simp at hS1
@@ -220,19 +223,21 @@ lemma eq_character_of_eq_sum_degree_one (hn : n>0) (hf : ∀ x, f x = ∑ i, �
 
 /-- A Boolean valued function with degree one Fourier weight equal to one
 must be `±1` times a degree one character. -/
-lemma eq_character_of_fourier_weight_one_eq_one' (hn : n>0) (hf : fourierWeight 1 f = 1):
+lemma eq_character_of_fourier_weight_one_eq_one' (hbv : BooleanValued f) (hn : n>0)
+    (hf : fourierWeight 1 f = 1):
     ∃ S ∈ {S|S.card = 1}, ∃ c : ℝ, f = c•χ S := by
   have hf' : ∀ x, f x = ∑ i, 𝓕 f {i} * (-1)^(x i).val := by
     apply eq_sum_degree_one_of_fourier_weight_one
-    rw [hf, norm_sq_eq_one]
-  exact eq_character_of_eq_sum_degree_one hn hf'
+    rw [hf, norm_sq_eq_one hbv]
+  exact eq_character_of_eq_sum_degree_one hbv hn hf'
 
 /-- A Boolean valued function with degree one Fourier weight equal to one
 must be `±1` times a degree one character.
 This is [odonnell2014], Exercise 1.19(a). -/
-lemma eq_character_of_fourier_weight_one_eq_one (hn : n>0) (hf : fourierWeight 1 f = 1):
+lemma eq_character_of_fourier_weight_one_eq_one (hbv : BooleanValued f) (hn : n>0)
+    (hf : fourierWeight 1 f = 1):
     ∃ i, ∃ c : ℝ, f = c•χ {i} := by
-  obtain ⟨S, hS, hS'⟩ := eq_character_of_fourier_weight_one_eq_one' hn hf
+  obtain ⟨S, hS, hS'⟩ := eq_character_of_fourier_weight_one_eq_one' hbv hn hf
   obtain ⟨i, hi⟩ := card_eq_one.mp hS
   use i
   rwa [hi] at hS'
@@ -255,11 +260,13 @@ lemma oneOn_ne_of_one_or_neg_one {x y : ℝ} (hx : x = 1 ∨ x = -1) (hy : y = 1
     oneOn (x ≠ y) = (1/2) * (1-x * y) := by
   obtain ⟨hx|hx, hy|hy⟩ := And.intro hx hy <;> { rw [hx, hy]; norm_num }
 
-lemma distance_eq : distance f g = 𝐄 (fun x ↦ (1/2) * (1-(f x) * (g x))) := by
+lemma distance_eq (hbv : BooleanValued f) (hbvg : BooleanValued g) :
+    distance f g = 𝐄 (fun x ↦ (1/2) * (1-(f x) * (g x))) := by
   simp_rw [distance, oneOn_ne_of_one_or_neg_one (hbv.one_or_neg_one _) (hbvg.one_or_neg_one _)]
 
-lemma inner_eq_distance : ⟪f, g⟫ = 1-2 * distance f g := by
-  rw [distance_eq, expectation]
+lemma inner_eq_distance (hbv : BooleanValued f) (hbvg : BooleanValued g) :
+    ⟪f, g⟫ = 1-2 * distance f g := by
+  rw [distance_eq hbv hbvg, expectation]
   dsimp
   rw [← mul_sum, sum_sub_distrib]
   ring_nf
@@ -280,7 +287,7 @@ The acceptance probability is the proportion of inputs `x y` on which the test a
 abbrev acceptanceProbabilityBLR (f : BooleanFunc n) : ℝ :=
   𝐄 <| fun x ↦ 𝐄 <| fun y ↦ oneOn <| (f x) * (f y) = f (x + y)
 
-lemma acceptanceProbabilityBLR_eq : acceptanceProbabilityBLR f =
+lemma acceptanceProbabilityBLR_eq (hbv : BooleanValued f) : acceptanceProbabilityBLR f =
     (𝐄 <| fun x ↦ 𝐄 <| fun y ↦ (1/2) * (1 + (f x) * (f y) * (f (x + y)))) := by
   have hl : ∀ x y, (f x) * (f y) = 1 ∨ (f x) * (f y) = -1 := by
     intro x y
@@ -288,7 +295,6 @@ lemma acceptanceProbabilityBLR_eq : acceptanceProbabilityBLR f =
       { rw [hx, hy]; simp }
   simp_rw [acceptanceProbabilityBLR, oneOn_eq_of_one_or_neg_one (hl _ _) (hbv.one_or_neg_one _)]
 
-omit hbv in
 /-- A "trivial" step in the proof of `almost_character`. Todo: simplify -/
 private lemma _aux_lemma : (𝐄 <| fun x ↦ 𝐄 <| fun y ↦ (1/2) * (1 + (f x) * (f y) * (f (x + y))))
     = (1/2) * (1 + (𝐄 <| fun x ↦ (f x) * (𝐄 <| fun y ↦ (f y) * (f (x + y))))) := by
@@ -307,13 +313,13 @@ private lemma _aux_lemma : (𝐄 <| fun x ↦ 𝐄 <| fun y ↦ (1/2) * (1 + (f 
 
 /-- The BLR test can detect that a Boolean valued function is close to being a character.
 See [odonnell2014], Theorem 1.30. -/
-theorem almost_character {ε : ℝ} (h : acceptanceProbabilityBLR f ≥ 1 - ε):
+theorem almost_character (hbv : BooleanValued f) {ε : ℝ} (h : acceptanceProbabilityBLR f ≥ 1 - ε):
     ∃ S, distance f (χ S) ≤ ε := by
   have : 1-ε ≤ (1/2) * (1 + ∑ S, (𝓕 f S) * (𝓕 f S)^2) := by
     calc
       _ ≤ acceptanceProbabilityBLR f := h
       _ = (𝐄 $ fun x ↦ 𝐄 $ fun y ↦ (1/2) * (1 + (f x) * (f y) * (f (x + y)))) :=
-        acceptanceProbabilityBLR_eq
+        acceptanceProbabilityBLR_eq hbv
       _ = (1/2) * (1 + (𝐄 $ fun x ↦ (f x) * (𝐄 $ fun y ↦ (f y) * (f (x + y))))) := _aux_lemma
       _ = (1/2) * (1 + (𝐄 $ fun x ↦ (f x) * (f⋆f) x)) := rfl
       _ = (1/2) * (1 + 𝐄 (f * (f⋆f))) := rfl
@@ -327,9 +333,9 @@ theorem almost_character {ε : ℝ} (h : acceptanceProbabilityBLR f ≥ 1 - ε):
       _ ≤ ∑ S, (𝓕 f S) * (𝓕 f S)^2  := by linarith
       _ ≤ ∑ S, (𝓕 f S₀) * (𝓕 f S)^2 := by gcongr; exact hS₀ _
       _ ≤ (𝓕 f S₀) * ∑ S, |𝓕 f S|^2 := by simp_rw [sq_abs]; rw [mul_sum]
-      _ = 𝓕 f S₀                  := by rw [fourier_eq_one, mul_one]
+      _ = 𝓕 f S₀                  := by rw [fourier_eq_one hbv, mul_one]
       _ = ⟪f, χ S₀⟫                := by rw [fourier_eq_inner, real_inner_comm]
-      _ = _                        := inner_eq_distance
+      _ = _                        := inner_eq_distance hbv (walsh_boolean_valued S₀)
   use S₀
   linarith
 

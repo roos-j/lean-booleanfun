@@ -44,7 +44,7 @@ open Classical Mathlib Finset Pi RealInnerProductSpace
 variable {α : Type*} {ι : Type*}
 variable {n : ℕ}
 
-variable {f : BooleanFunc n} [hbv : BooleanValued f]
+variable {f : BooleanFunc n}
 
 private lemma filter_univ_not_mem {α : Type*} [Fintype α] [DecidableEq α] (s : Finset α) :
     univ.filter (· ∉ s) = sᶜ := by
@@ -58,7 +58,7 @@ abbrev Votes n := Fin n → Fin 2
 def majority : BooleanFunc n := fun x ↦ if ∑ j, (x j).val > n / 2 then 1 else -1
 
 /-- The majority function is Boolean valued. -/
-instance : BooleanValued (@majority n) where
+lemma majority_boolean_valued : BooleanValued (@majority n) where
   one_or_neg_one := by
     intro x
     rw [majority.eq_def]
@@ -117,7 +117,7 @@ lemma zero_not_unanimous (f : BooleanFunc n) (hn : n = 0) : ¬IsUnanimous f := b
 
 /-- Explicit Walsh-Fourier expansion of the not-all-equal predicate on a 3-tuple composed with a Boolean valued function.
 A crucial step in the proof of Arrow's theorem. -/
-lemma oneOn_NAE3_eq {x y z : Fin n → Fin 2}:
+lemma oneOn_NAE3_eq (hbv : BooleanValued f) {x y z : Fin n → Fin 2}:
     oneOn (NAE3 (f x) (f y) (f z)) = 3/4 - (1/4) * (f x) * (f y) - (1/4) * (f y) * (f z) - (1/4) * (f x) * (f z) := by
   obtain ⟨h0|h0, h1|h1, h2|h2⟩ := And.intro (hbv.one_or_neg_one x)
     (And.intro (hbv.one_or_neg_one y) (hbv.one_or_neg_one z)) <;>
@@ -146,7 +146,6 @@ lemma _triple_sum_oneOn_consistent_eq:
   -- = 6^n
   norm_num
 
-omit hbv in
 /-- If a voting rule is Condorcet, then the probability of a Condorcet winner equals 1. -/
 lemma probabilityCondorcetWinner_eq_one (hc : IsCondorcet f):
     probabilityCondorcetWinner f = 1 := by
@@ -237,9 +236,9 @@ lemma _eq_noise_operator : T = @noise_operator n (-1/3) := by
 
 /-- The probability of having a Condorcet winner can be expressed in terms of the noise operator.
 See [odonnell2014], Theorem 2.56. -/
-theorem probabilityCondorcetWinner_eq:
+theorem probabilityCondorcetWinner_eq (hbv : BooleanValued f) :
     probabilityCondorcetWinner f = 3/4 * (1- noise_stability (-1/3) f) := by
-  simp_rw [probabilityCondorcetWinner.eq_def, oneOn_NAE3_eq, sub_mul, sum_sub_distrib]
+  simp_rw [probabilityCondorcetWinner.eq_def, oneOn_NAE3_eq hbv, sub_mul, sum_sub_distrib]
   conv => enter [1, 2, 1, 1, 1]; tactic => simp_rw [← mul_sum]
   rw [_triple_sum_oneOn_consistent_eq]
   conv => enter [1, 2, 2, 2, x]; rw [sum_comm]; enter [2, y, 2, z];
@@ -273,18 +272,19 @@ theorem probabilityCondorcetWinner_eq:
   rw [hpow]
   ring
 
-/-- Arrow's theorem as formulated in [odonnell2014], Sec. 2.5 : Every unanimous voting rule that always admits a Condorcet winner is a dictatorship. -/
--- One can generalize this to usee three different voting rules `f, g, h`.
-theorem dictator_of_condorcet_and_unanimous (h : IsUnanimous f):
-    IsCondorcet f → HasDictator f := by
+-- Todo: Generalize this to use three different voting rules `f, g, h`.
+/-- **Arrow's theorem**
+As formulated in [odonnell2014], Sec. 2.5: Every unanimous voting rule that always admits a Condorcet winner is a dictatorship.
+Here a voting rule is represented by a Boolean valued function on the Hamming cube. -/
+theorem dictator_of_condorcet_and_unanimous (hbv : BooleanValued f)
+    (hf : IsUnanimous f) (hf' : IsCondorcet f) : HasDictator f := by
   wlog hn : 0 < n
   · have := zero_not_unanimous f (Nat.eq_zero_of_not_pos hn)
     contradiction
-  intro hc
-  have := probabilityCondorcetWinner_eq_one hc
+  have := probabilityCondorcetWinner_eq_one hf'
   let ρ : ℝ := -1/3
   have : noise_stability ρ f = ρ := by
-    rw [probabilityCondorcetWinner_eq] at this
+    rw [probabilityCondorcetWinner_eq hbv] at this
     calc
       _ = 1-4/3 * (3/4 * ((1 : ℝ)-(noise_stability ρ f))) := by ring
       _ = _   := by rw [this]; ring
@@ -292,7 +292,7 @@ theorem dictator_of_condorcet_and_unanimous (h : IsUnanimous f):
     simp_rw [sub_mul, sum_sub_distrib]
     rw [← noise_stability_eq_sum_fourier, this]
     nth_rewrite 1 [← mul_one ρ]
-    rw [← fourier_eq_one (f := f), mul_sum, sub_self]
+    rw [← fourier_eq_one hbv, mul_sum, sub_self]
   have hmz : ∀ S ∈ univ, (ρ^S.card - ρ) * |𝓕 f S|^2 = 0 := by {
     have : ∀ S ∈ univ, 0 ≤ (ρ ^ S.card - ρ) * |𝓕 f S| ^ 2 := by
       intro S _
@@ -331,11 +331,11 @@ theorem dictator_of_condorcet_and_unanimous (h : IsUnanimous f):
     simp at this
     assumption
   have := fourier_eq_zero_iff_fourier_weight_eq.mp this
-  rw [norm_sq_eq_one] at this
-  obtain ⟨i, ⟨c, hfeq⟩⟩ := eq_character_of_fourier_weight_one_eq_one hn this
+  rw [norm_sq_eq_one hbv] at this
+  obtain ⟨i, ⟨c, hfeq⟩⟩ := eq_character_of_fourier_weight_one_eq_one hbv hn this
   use i
   have := funext_iff.mp hfeq 0
-  rw [h.1] at this
+  rw [hf.1] at this
   simp at this
   rw [hfeq, ← this]
   simp
