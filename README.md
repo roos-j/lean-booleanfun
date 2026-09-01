@@ -19,6 +19,10 @@ Main results formalized so far:
 
 and open it in VS Code (more instructions [here](https://leanprover-community.github.io/install/project.html)).
 
+### Palomar registration
+
+The formalization of Arrow's theorem in this repository is registered in Palomar as [PALOMAR-2026-09-01-000011](https://palomar-registry.org/entry.html?id=PALOMAR-2026-09-01-000011&version=1). Palomar is a public, searchable registry of Lean formalizations whose proofs have been machine-checked. Each entry points to an immutable version of a public repository and records the exact formal statement that was checked, its dependencies, the result of the proof check, and the findings of a documented editorial review.
+
 ### Future goals
 * hypercontractivity, Bonami lemma
 * KKL theorem
