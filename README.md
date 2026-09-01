@@ -1,5 +1,7 @@
 ## Analysis of Boolean functions in Lean
 
+[![Lean](https://github.com/roos-j/lean-booleanfun/actions/workflows/lean_action_ci.yml/badge.svg?branch=main)](https://github.com/roos-j/lean-booleanfun/actions/workflows/lean_action_ci.yml)
+
 This is a project formalizing some basic definitions and results in the analysis of Boolean functions using [Lean 4](https://leanprover-community.github.io/), largely following the book [Analysis of Boolean functions](https://arxiv.org/abs/2105.10386) by Ryan O'Donnell.
 
 Main results formalized so far:
