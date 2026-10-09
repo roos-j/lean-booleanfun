@@ -153,7 +153,7 @@ lemma tendsto_Φ_atTop
 end Lemm
 
 /-- The range of the Gaussian CDF is the open interval `(0, 1)`. -/
-theorem Φ_range
+theorem range_Φ
   : range Φ = Ioo 0 1
   := by
   apply Set.ext
@@ -299,7 +299,7 @@ lemma Φ_mem_Ioo
   : (t : ℝ) → Φ t ∈ Ioo 0 1
   := by
   intro t
-  rw [← Φ_range]
+  rw [← range_Φ]
   exact mem_range_self t
 
 lemma Φ_invFun_id
@@ -308,7 +308,7 @@ lemma Φ_invFun_id
   intro x hx
   apply invFun_eq
   change x ∈ range Φ
-  rw [Φ_range]
+  rw [range_Φ]
   exact hx
 
 lemma continuousAt_invFun_Φ
