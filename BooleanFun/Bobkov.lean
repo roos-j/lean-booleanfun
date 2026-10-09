@@ -537,14 +537,165 @@ lemma tendsto_invFun_Φ_one
   rw [Φ_invFun_id hx]
   exact le_of_lt hbx
 
+lemma tendsto_ϕ_atBot
+  : Tendsto ϕ atBot (𝓝 0)
+  := by
+  have l_sq_atTop
+    : Tendsto (λ t : ℝ => t ^ 2) atTop atTop
+    := by
+    exact tendsto_pow_atTop (by norm_num)
+
+  have l_sq
+    : Tendsto (λ t : ℝ => t ^ 2) atBot atTop
+    := by
+    simpa only [Function.comp_def, neg_sq]
+      using l_sq_atTop.comp tendsto_neg_atBot_atTop
+
+  have l_expo
+    : Tendsto (λ t : ℝ => -(t ^ 2) / 2) atBot atBot
+    := by
+    exact (tendsto_neg_atTop_atBot.comp l_sq).atBot_div_const
+      (by norm_num)
+
+  have l_exp
+    : Tendsto (λ t : ℝ => exp (-(t ^ 2) / 2)) atBot (𝓝 0)
+    := by
+    exact Real.tendsto_exp_atBot.comp l_expo
+
+  have l_form
+    : ϕ = λ t : ℝ => (1 / √(2 * π)) * exp (-(t ^ 2) / 2)
+    := by
+    funext t
+    exact ϕ_eq t
+
+  rw [l_form]
+  simpa only [mul_zero]
+    using l_exp.const_mul (1 / √(2 * π))
+
+lemma tendsto_ϕ_atTop
+  : Tendsto ϕ atTop (𝓝 0)
+  := by
+  have l_sq
+    : Tendsto (λ t : ℝ => t ^ 2) atTop atTop
+    := by
+    exact tendsto_pow_atTop (by norm_num)
+
+  have l_expo
+    : Tendsto (λ t : ℝ => -(t ^ 2) / 2) atTop atBot
+    := by
+    exact (tendsto_neg_atTop_atBot.comp l_sq).atBot_div_const
+      (by norm_num)
+
+  have l_exp
+    : Tendsto (λ t : ℝ => exp (-(t ^ 2) / 2)) atTop (𝓝 0)
+    := by
+    exact Real.tendsto_exp_atBot.comp l_expo
+
+  have l_form
+    : ϕ = λ t : ℝ => (1 / √(2 * π)) * exp (-(t ^ 2) / 2)
+    := by
+    funext t
+    exact ϕ_eq t
+
+  rw [l_form]
+  simpa only [mul_zero]
+    using l_exp.const_mul (1 / √(2 * π))
+
+lemma tendsto_gaussianI_zero
+  : Tendsto 𝓘 (𝓝[>] 0) (𝓝 0)
+  := by
+  have l_comp
+    : Tendsto (ϕ ∘ invFun Φ) (𝓝[>] 0) (𝓝 0)
+    := by
+    exact tendsto_ϕ_atBot.comp tendsto_invFun_Φ_zero
+
+  apply l_comp.congr'
+
+  have l_in
+    : ∀ᶠ x : ℝ in 𝓝[>] 0, x ∈ Ioo 0 1
+    := Ioo_mem_nhdsGT zero_lt_one
+
+  filter_upwards [l_in] with x hx
+  exact (gaussianI_eq hx).symm
+
+
+lemma tendsto_gaussianI_one
+  : Tendsto 𝓘 (𝓝[<] 1) (𝓝 0)
+  := by
+  have l_comp
+    : Tendsto (ϕ ∘ invFun Φ) (𝓝[<] 1) (𝓝 0)
+    := by
+    exact tendsto_ϕ_atTop.comp tendsto_invFun_Φ_one
+
+  apply l_comp.congr'
+
+  have l_in
+    : ∀ᶠ x : ℝ in 𝓝[<] 1, x ∈ Ioo 0 1
+    := Ioo_mem_nhdsLT zero_lt_one
+
+  filter_upwards [l_in] with x hx
+  exact (gaussianI_eq hx).symm
+
+lemma continuousOn_gaussianI
+  : ContinuousOn 𝓘 (Icc 0 1)
+  := by
+  intro x hx
+
+  by_cases hx0 : x = 0
+  .
+    subst x
+    have l_cont
+      : ContinuousWithinAt 𝓘 (Ioi 0) 0
+      := by
+      change Tendsto 𝓘 (𝓝[>] 0) (𝓝 (𝓘 0))
+      rw [gaussianI_zero]
+      exact tendsto_gaussianI_zero
+
+    apply l_cont.insert.mono
+    intro y hy
+    change y = 0 ∨ 0 < y
+    rcases eq_or_lt_of_le hy.1 with hy0 | hy0
+    . exact Or.inl hy0.symm
+    . exact Or.inr hy0
+
+  by_cases hx1 : x = 1
+  .
+    subst x
+    have l_cont
+      : ContinuousWithinAt 𝓘 (Iio 1) 1
+      := by
+      change Tendsto 𝓘 (𝓝[<] 1) (𝓝 (𝓘 1))
+      rw [gaussianI_one]
+      exact tendsto_gaussianI_one
+
+    apply l_cont.insert.mono
+    intro y hy
+    change y = 1 ∨ y < 1
+    exact eq_or_lt_of_le hy.2
+
+  have l_in
+    : x ∈ Ioo 0 1
+    := by
+    constructor
+    . exact lt_of_le_of_ne hx.1 (Ne.symm hx0)
+    . exact lt_of_le_of_ne hx.2 hx1
+
+  exact (hasDerivAt_gaussianI l_in).continuousAt.continuousWithinAt
+
 end Lemm
 
 /-- The Gaussian isoperimetric profile is strictly concave on `[0, 1]`. -/
 theorem strictConcaveOn_gaussianI
   : StrictConcaveOn ℝ (Icc 0 1) 𝓘
   := by
-  -- i will need to read more mathlib (and maybe revisit a textbook)
-  sorry
+  apply strictConcaveOn_of_deriv2_neg
+  . exact convex_Icc 0 1
+  . exact Lemm.continuousOn_gaussianI
+  .
+    intro x hx
+    rw [interior_Icc] at hx
+    change deriv (deriv 𝓘) x < 0
+    exact deriv_deriv_gaussianI_neg hx
 
 /-- Differential equation satisfied by the Gaussian isoperimetric profile. -/
 -- original: theorem gaussianI_mul_deriv_deriv_eq (hx : x ∈ Ioo 0 1) : 𝓘 x * deriv (deriv 𝓘) x = -1
