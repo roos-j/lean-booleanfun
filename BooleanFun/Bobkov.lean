@@ -1777,6 +1777,25 @@ lemma bobkov_two_point_interior
     simp only [l_center, l_square] at l_swapped
     linarith only [l_swapped]
 
+lemma tendsto_gaussianI_of_tendsto
+  {α : Type*}
+  : {l : Filter α} → {f : α → ℝ} → {x : ℝ} →
+      x ∈ Icc 0 1 →
+      Tendsto f l (𝓝 x) →
+      (∀ᶠ t in l, f t ∈ Icc 0 1) →
+      Tendsto (λ t => 𝓘 (f t)) l (𝓝 (𝓘 x))
+  := by
+  intro l f x hx hf h_in
+
+  have l_within : Tendsto f l (𝓝[Icc 0 1] x) := by
+    exact tendsto_nhdsWithin_iff.mpr ⟨hf, h_in⟩
+
+  have l_cont
+    : Tendsto 𝓘 (𝓝[Icc 0 1] x) (𝓝 (𝓘 x)) := by
+    exact continuousOn_gaussianI x hx
+
+  exact l_cont.comp l_within
+
 end Lemm
 
 /-- Bobkov's classical two-point inequality for the Gaussian isoperimetric profile. -/
@@ -1788,7 +1807,116 @@ theorem bobkov_two_point
       √((𝓘 a) ^ 2 + ((a - b) / 2) ^ 2) +
       √((𝓘 b) ^ 2 + ((a - b) / 2) ^ 2)
   := by
-  sorry
+  let f : ℝ → ℝ → ℝ :=
+    λ u ε => (u + ε) / (1 + 2 * ε)
+
+  have l_in
+    : {u ε : ℝ} → u ∈ Icc 0 1 → 0 < ε →
+        f u ε ∈ Ioo 0 1 := by
+    intro u ε hu hε
+    have l_den_pos : 0 < 1 + 2 * ε := by
+      linarith
+    dsimp [f]
+    constructor
+    .
+      apply div_pos
+      . linarith [hu.1]
+      . exact l_den_pos
+    .
+      apply (div_lt_iff₀ l_den_pos).mpr
+      linarith [hu.2]
+
+  have l_eps
+    : Tendsto (λ ε : ℝ => ε) (𝓝[>] 0) (𝓝 0) := by
+    exact tendsto_id.mono_left nhdsWithin_le_nhds
+
+  have l_flim
+    : (u : ℝ) → Tendsto (f u) (𝓝[>] 0) (𝓝 u) := by
+    intro u
+
+    have l_num
+      : Tendsto (λ ε : ℝ => u + ε)
+          (𝓝[>] 0) (𝓝 (u + 0)) := by
+      exact tendsto_const_nhds.add l_eps
+
+    have l_den
+      : Tendsto (λ ε : ℝ => 1 + 2 * ε)
+          (𝓝[>] 0) (𝓝 (1 + 2 * (0 : ℝ))) := by
+      exact tendsto_const_nhds.add
+        (tendsto_const_nhds.mul l_eps)
+
+    have l_quot := l_num.div l_den (by norm_num)
+    simpa only [f, Pi.div_def, add_zero, mul_zero, div_one]
+      using l_quot
+
+  have l_eps_in
+    : ∀ᶠ ε : ℝ in 𝓝[>] 0, ε ∈ Ioo 0 1 := by
+    exact Ioo_mem_nhdsGT zero_lt_one
+
+  have l_eventually_in
+    : {u : ℝ} → u ∈ Icc 0 1 →
+        ∀ᶠ ε : ℝ in 𝓝[>] 0, f u ε ∈ Icc 0 1 := by
+    intro u hu
+    filter_upwards [l_eps_in] with ε hε
+    have h := l_in hu hε.1
+    exact ⟨le_of_lt h.1, le_of_lt h.2⟩
+
+  have l_Ilim
+    : {u : ℝ} → u ∈ Icc 0 1 →
+        Tendsto (λ ε : ℝ => 𝓘 (f u ε))
+          (𝓝[>] 0) (𝓝 (𝓘 u)) := by
+    intro u hu
+    exact Lemm.tendsto_gaussianI_of_tendsto
+      hu (l_flim u) (l_eventually_in hu)
+
+  have l_mid : (a + b) / 2 ∈ Icc 0 1 := by
+    constructor
+    . linarith [ha.1, hb.1]
+    . linarith [ha.2, hb.2]
+
+  have l_mid_eq
+    : (ε : ℝ) →
+        (f a ε + f b ε) / 2 = f ((a + b) / 2) ε := by
+    intro ε
+    dsimp [f]
+    ring
+
+  have l_difference
+    : Tendsto (λ ε : ℝ => (f a ε - f b ε) / 2)
+        (𝓝[>] 0) (𝓝 ((a - b) / 2)) := by
+    exact ((l_flim a).sub (l_flim b)).div_const 2
+
+  have l_left
+    : Tendsto (λ ε : ℝ => 2 * 𝓘 (f ((a + b) / 2) ε))
+        (𝓝[>] 0) (𝓝 (2 * 𝓘 ((a + b) / 2))) := by
+    exact tendsto_const_nhds.mul (l_Ilim l_mid)
+
+  have l_right
+    : Tendsto
+        (λ ε : ℝ =>
+          √((𝓘 (f a ε)) ^ 2 + ((f a ε - f b ε) / 2) ^ 2) +
+          √((𝓘 (f b ε)) ^ 2 + ((f a ε - f b ε) / 2) ^ 2))
+        (𝓝[>] 0)
+        (𝓝
+          (√((𝓘 a) ^ 2 + ((a - b) / 2) ^ 2) +
+           √((𝓘 b) ^ 2 + ((a - b) / 2) ^ 2))) := by
+    exact
+      (((l_Ilim ha).pow 2).add (l_difference.pow 2)).sqrt.add
+        (((l_Ilim hb).pow 2).add (l_difference.pow 2)).sqrt
+
+  have l_inequality
+    : ∀ᶠ ε : ℝ in 𝓝[>] 0,
+        2 * 𝓘 (f ((a + b) / 2) ε) ≤
+          √((𝓘 (f a ε)) ^ 2 + ((f a ε - f b ε) / 2) ^ 2) +
+          √((𝓘 (f b ε)) ^ 2 + ((f a ε - f b ε) / 2) ^ 2) := by
+    filter_upwards [l_eps_in] with ε hε
+    have l_bound :=
+      Lemm.bobkov_two_point_interior
+        (l_in ha hε.1) (l_in hb hε.1)
+    rw [l_mid_eq ε] at l_bound
+    exact l_bound
+
+  exact le_of_tendsto_of_tendsto l_left l_right l_inequality
 
 end twopoint_inequality
 
