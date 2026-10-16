@@ -75,7 +75,7 @@ lemma integral_Iio_ϕ_pos
   refine (MeasureTheory.integral_pos_iff_support_of_nonneg ?_ ?_).mpr ?_
   .
     change (r : ℝ) → 0 ≤ ϕ r
-    exact λ r ↦ le_of_lt (ϕ_pos r)
+    exact fun r ↦ le_of_lt (ϕ_pos r)
   .
     apply MeasureTheory.Integrable.restrict
     exact integrable_ϕ
@@ -91,7 +91,7 @@ lemma integral_Ici_ϕ_pos
   refine (MeasureTheory.integral_pos_iff_support_of_nonneg ?_ ?_).mpr ?_
   .
     change (r : ℝ) → 0 ≤ ϕ r
-    exact λ r ↦ le_of_lt (ϕ_pos r)
+    exact fun r ↦ le_of_lt (ϕ_pos r)
   .
     apply MeasureTheory.Integrable.restrict
     exact integrable_ϕ
@@ -135,7 +135,7 @@ lemma tendsto_Φ_atTop
   : Tendsto Φ atTop (𝓝 1)
   := by
   have l_complement
-    : Φ = λ t : ℝ => 1 - ∫ s in Ici t, ϕ s
+    : Φ = fun t : ℝ => 1 - ∫ s in Ici t, ϕ s
     := by
     funext t
     apply (eq_sub_iff_add_eq).mpr
@@ -143,7 +143,7 @@ lemma tendsto_Φ_atTop
     rw [← integral_ϕ_eq_one]
     exact integral_Iio_add_Ici integrable_ϕ.integrableOn integrable_ϕ.integrableOn
   have l_tail
-    : Tendsto (λ t : ℝ => ∫ s in Ici t, ϕ s) atTop (𝓝 0)
+    : Tendsto (fun t : ℝ => ∫ s in Ici t, ϕ s) atTop (𝓝 0)
     := by exact MeasureTheory.tendsto_integral_Ici_zero fun ⦃U⦄ a ↦ a
   rw [l_complement]
   have l_sub := l_tail.const_sub 1
@@ -216,12 +216,12 @@ lemma hasDerivAt_ϕ
   := by
   intro t
   have l_sq
-    : HasDerivAt (λ u : ℝ => u ^ 2) (2 * t) t
+    : HasDerivAt (fun u : ℝ => u ^ 2) (2 * t) t
     := by
     simpa only [id_eq, Nat.cast_ofNat, Nat.reduceSub, pow_one, mul_one]
       using (hasDerivAt_id t).fun_pow 2
   have l_expo
-    : HasDerivAt (λ u : ℝ => -(u ^ 2) / 2) (-t) t
+    : HasDerivAt (fun u : ℝ => -(u ^ 2) / 2) (-t) t
     := by
     have l_quot := l_sq.neg.div_const 2
     have l_quot_val
@@ -232,14 +232,14 @@ lemma hasDerivAt_ϕ
     exact l_quot
   have l_exp
     : HasDerivAt
-        (λ u : ℝ => exp (-(u ^ 2) / 2))
+        (fun u : ℝ => exp (-(u ^ 2) / 2))
         (exp (-(t ^ 2) / 2) * (-t))
         t
     := by
     exact l_expo.exp
   have l_prod := l_exp.const_mul (1 / √(2 * π))
   have l_lam
-    : ϕ = λ u : ℝ => (1 / √(2 * π)) * exp (-(u ^ 2) / 2)
+    : ϕ = fun u : ℝ => (1 / √(2 * π)) * exp (-(u ^ 2) / 2)
     := by
     funext u
     exact ϕ_eq u
@@ -264,7 +264,7 @@ lemma hasDerivAt_Φ
   := by
   intro t
   have l_primitive
-    : Φ = λ u : ℝ => (∫ s in 0..u, ϕ s) + Φ 0
+    : Φ = fun u : ℝ => (∫ s in 0..u, ϕ s) + Φ 0
     := by
     funext u
     apply (sub_eq_iff_eq_add).mp
@@ -275,7 +275,7 @@ lemma hasDerivAt_Φ
     ]
     exact integral_Iic_sub_Iic integrable_ϕ.integrableOn integrable_ϕ.integrableOn
   have l_deriv
-    : HasDerivAt (λ u : ℝ => ∫ s in 0..u, ϕ s) (ϕ t) t
+    : HasDerivAt (fun u : ℝ => ∫ s in 0..u, ϕ s) (ϕ t) t
     := by
     apply integral_hasDerivAt_right
     .
@@ -431,7 +431,7 @@ theorem hasDerivAt_gaussianI
     : ϕ (invFun Φ x) ≠ 0
     := ne_of_gt (Lemm.ϕ_pos (invFun Φ x))
   rw [mul_assoc, mul_inv_cancel₀ l_nonzero, mul_one] at l_comp -- ChatGPT help: mul_inv_cancel₀ (leansearch.net gave all useless results (that looked good))
-  -- cant do rw ite_left because gaussianI is λ bound
+  -- cant do rw ite_left because gaussianI is fun bound
   apply l_comp.congr_of_eventuallyEq
   filter_upwards [isOpen_Ioo.mem_nhds hx]
   intro y hy
@@ -449,7 +449,7 @@ theorem deriv_gaussianI
 /-- The Gaussian isoperimetric profile is positive on `(0, 1)`. -/
 -- original : theorem gaussianI_pos (hx : x ∈ Ioo 0 1) : 0 < 𝓘 x
 theorem gaussianI_pos
-  : {x : ℝ} -> (hx : x ∈ Ioo 0 1) -> 0 < 𝓘 x
+  : {x : ℝ} → (hx : x ∈ Ioo 0 1) → 0 < 𝓘 x
   := by
   intro x hx
   rw [Lemm.gaussianI_eq hx]
@@ -464,7 +464,7 @@ theorem hasDerivAt_deriv_gaussianI
   intro x hx
   have l_neg
     : HasDerivAt
-        (λ y => -invFun Φ y)
+        (fun y => -invFun Φ y)
         (-(ϕ (invFun Φ x))⁻¹)
         x
     := by
@@ -502,7 +502,7 @@ lemma tendsto_invFun_Φ_zero
   : Tendsto (invFun Φ) (𝓝[>] 0) atBot
   := by
   apply tendsto_atBot.mpr -- leansearch
-  -- idea: Φ is mono -> Φ (invFun Φ a) ≤ Φ b; a ∈ ioo 0 1 -> Φ (invFun Φ a) = a; so a ≤ Φ b
+  -- idea: Φ is mono → Φ (invFun Φ a) ≤ Φ b; a ∈ ioo 0 1 → Φ (invFun Φ a) = a; so a ≤ Φ b
   intro b
   have l_in
     : ∀ᶠ x : ℝ in 𝓝[>] 0, x ∈ Ioo 0 1
@@ -541,29 +541,29 @@ lemma tendsto_ϕ_atBot
   : Tendsto ϕ atBot (𝓝 0)
   := by
   have l_sq_atTop
-    : Tendsto (λ t : ℝ => t ^ 2) atTop atTop
+    : Tendsto (fun t : ℝ => t ^ 2) atTop atTop
     := by
     exact tendsto_pow_atTop (by norm_num)
 
   have l_sq
-    : Tendsto (λ t : ℝ => t ^ 2) atBot atTop
+    : Tendsto (fun t : ℝ => t ^ 2) atBot atTop
     := by
     simpa only [Function.comp_def, neg_sq]
       using l_sq_atTop.comp tendsto_neg_atBot_atTop
 
   have l_expo
-    : Tendsto (λ t : ℝ => -(t ^ 2) / 2) atBot atBot
+    : Tendsto (fun t : ℝ => -(t ^ 2) / 2) atBot atBot
     := by
     exact (tendsto_neg_atTop_atBot.comp l_sq).atBot_div_const
       (by norm_num)
 
   have l_exp
-    : Tendsto (λ t : ℝ => exp (-(t ^ 2) / 2)) atBot (𝓝 0)
+    : Tendsto (fun t : ℝ => exp (-(t ^ 2) / 2)) atBot (𝓝 0)
     := by
     exact Real.tendsto_exp_atBot.comp l_expo
 
   have l_form
-    : ϕ = λ t : ℝ => (1 / √(2 * π)) * exp (-(t ^ 2) / 2)
+    : ϕ = fun t : ℝ => (1 / √(2 * π)) * exp (-(t ^ 2) / 2)
     := by
     funext t
     exact ϕ_eq t
@@ -576,23 +576,23 @@ lemma tendsto_ϕ_atTop
   : Tendsto ϕ atTop (𝓝 0)
   := by
   have l_sq
-    : Tendsto (λ t : ℝ => t ^ 2) atTop atTop
+    : Tendsto (fun t : ℝ => t ^ 2) atTop atTop
     := by
     exact tendsto_pow_atTop (by norm_num)
 
   have l_expo
-    : Tendsto (λ t : ℝ => -(t ^ 2) / 2) atTop atBot
+    : Tendsto (fun t : ℝ => -(t ^ 2) / 2) atTop atBot
     := by
     exact (tendsto_neg_atTop_atBot.comp l_sq).atBot_div_const
       (by norm_num)
 
   have l_exp
-    : Tendsto (λ t : ℝ => exp (-(t ^ 2) / 2)) atTop (𝓝 0)
+    : Tendsto (fun t : ℝ => exp (-(t ^ 2) / 2)) atTop (𝓝 0)
     := by
     exact Real.tendsto_exp_atBot.comp l_expo
 
   have l_form
-    : ϕ = λ t : ℝ => (1 / √(2 * π)) * exp (-(t ^ 2) / 2)
+    : ϕ = fun t : ℝ => (1 / √(2 * π)) * exp (-(t ^ 2) / 2)
     := by
     funext t
     exact ϕ_eq t
@@ -712,7 +712,7 @@ theorem tendsto_deriv_gaussianI_zero
   : Tendsto (deriv 𝓘) (𝓝[>] 0) atTop
   := by
   have l_neg
-    : Tendsto (λ x => -invFun Φ x) (𝓝[>] 0) atTop
+    : Tendsto (fun x => -invFun Φ x) (𝓝[>] 0) atTop
     := by
     exact tendsto_neg_atBot_atTop.comp Lemm.tendsto_invFun_Φ_zero
   apply l_neg.congr'
@@ -728,7 +728,7 @@ theorem tendsto_deriv_gaussianI_one
   := by
   -- same
   have l_neg
-    : Tendsto (λ x => -invFun Φ x) (𝓝[<] 1) atBot
+    : Tendsto (fun x => -invFun Φ x) (𝓝[<] 1) atBot
     := by
     exact tendsto_neg_atTop_atBot.comp Lemm.tendsto_invFun_Φ_one
   apply l_neg.congr'
@@ -748,7 +748,7 @@ namespace Lemm
 lemma hasDerivAt_deriv_gaussianI_pow_two
   : {x : ℝ} → x ∈ Ioo 0 1
     → HasDerivAt
-        (λ y : ℝ => (deriv 𝓘 y) ^ 2)
+        (fun y : ℝ => (deriv 𝓘 y) ^ 2)
         (-2 * deriv 𝓘 x / 𝓘 x)
         x
   := by
@@ -756,7 +756,7 @@ lemma hasDerivAt_deriv_gaussianI_pow_two
 
   have l_sq
     : HasDerivAt
-        (λ y : ℝ => (deriv 𝓘 y) ^ 2)
+        (fun y : ℝ => (deriv 𝓘 y) ^ 2)
         (2 * deriv 𝓘 x * (-(𝓘 x)⁻¹))
         x
     := by
@@ -776,7 +776,7 @@ lemma hasDerivAt_deriv_gaussianI_pow_two
 lemma hasDerivAt_deriv_deriv_gaussianI_pow_two
   : {x : ℝ} → x ∈ Ioo 0 1
     → HasDerivAt
-        (deriv (λ y : ℝ => (deriv 𝓘 y) ^ 2))
+        (deriv (fun y : ℝ => (deriv 𝓘 y) ^ 2))
         (2 * (1 + (deriv 𝓘 x) ^ 2) / (𝓘 x) ^ 2)
         x
   := by
@@ -810,7 +810,7 @@ lemma hasDerivAt_deriv_deriv_gaussianI_pow_two
   exact (hasDerivAt_deriv_gaussianI_pow_two hy).deriv
 
 lemma convexOn_deriv_gaussianI_pow_two
-  : ConvexOn ℝ (Ioo 0 1) (λ x : ℝ => (deriv 𝓘 x) ^ 2)
+  : ConvexOn ℝ (Ioo 0 1) (fun x : ℝ => (deriv 𝓘 x) ^ 2)
   := by
   apply convexOn_of_deriv2_nonneg'
   . exact convex_Ioo 0 1
@@ -822,7 +822,7 @@ lemma convexOn_deriv_gaussianI_pow_two
     exact (hasDerivAt_deriv_deriv_gaussianI_pow_two hx).differentiableAt.differentiableWithinAt
   .
     intro x hx
-    change 0 ≤ deriv (deriv (λ y : ℝ => (deriv 𝓘 y) ^ 2)) x
+    change 0 ≤ deriv (deriv (fun y : ℝ => (deriv 𝓘 y) ^ 2)) x
     rw [(hasDerivAt_deriv_deriv_gaussianI_pow_two hx).deriv]
     positivity
 
@@ -838,12 +838,12 @@ lemma Φ_neg
   intro t
   have l_deriv
     : (u : ℝ)
-    →   HasDerivAt (λ v : ℝ => Φ (-v) + Φ v) 0 u
+    →   HasDerivAt (fun v : ℝ => Φ (-v) + Φ v) 0 u
     := by
     intro u
     have l_neg
       : HasDerivAt
-          (λ v : ℝ => Φ (-v))
+          (fun v : ℝ => Φ (-v))
           (ϕ (-u) * (-1))
           u
       := by
@@ -856,23 +856,23 @@ lemma Φ_neg
     := by
     intro u
     exact is_const_of_deriv_eq_zero
-      (λ v => (l_deriv v).differentiableAt)
-      (λ v => (l_deriv v).deriv)
+      (fun v => (l_deriv v).differentiableAt)
+      (fun v => (l_deriv v).deriv)
       u t
 
   have l_reflected
-    : Tendsto (λ u : ℝ => Φ (-u)) atTop (𝓝 0)
+    : Tendsto (fun u : ℝ => Φ (-u)) atTop (𝓝 0)
     := by
     exact tendsto_Φ_atBot.comp tendsto_neg_atTop_atBot
 
   have l_limit
-    : Tendsto (λ u : ℝ => Φ (-u) + Φ u) atTop (𝓝 1)
+    : Tendsto (fun u : ℝ => Φ (-u) + Φ u) atTop (𝓝 1)
     := by
     simpa only [zero_add]
       using l_reflected.add tendsto_Φ_atTop
 
   have l_limit_const
-    : Tendsto (λ _ : ℝ => Φ (-t) + Φ t) atTop (𝓝 1)
+    : Tendsto (fun _ : ℝ => Φ (-t) + Φ t) atTop (𝓝 1)
     := by
     apply l_limit.congr'
     exact Filter.Eventually.of_forall l_const
@@ -986,7 +986,7 @@ lemma gaussianI_le_of_mem_Icc
 lemma hasDerivAt_gaussianI_pow_two
   : {x : ℝ} → x ∈ Ioo 0 1
     → HasDerivAt
-        (λ y : ℝ => (𝓘 y) ^ 2)
+        (fun y : ℝ => (𝓘 y) ^ 2)
         (2 * 𝓘 x * deriv 𝓘 x)
         x
   := by
@@ -1002,7 +1002,7 @@ lemma hasDerivAt_gaussianI_pow_two
 lemma hasDerivAt_deriv_of_gaussianI_pow_two
   : {x : ℝ} → x ∈ Ioo 0 1
     → HasDerivAt
-        (deriv (λ y : ℝ => (𝓘 y) ^ 2))
+        (deriv (fun y : ℝ => (𝓘 y) ^ 2))
         (2 * ((deriv 𝓘 x) ^ 2 - 1))
         x
   := by
@@ -1017,7 +1017,7 @@ lemma hasDerivAt_deriv_of_gaussianI_pow_two
     exact hasDerivAt_gaussianI hx
   have l_prod
     : HasDerivAt
-        (λ y : ℝ => 2 * 𝓘 y * deriv 𝓘 y)
+        (fun y : ℝ => 2 * 𝓘 y * deriv 𝓘 y)
         ((2 * deriv 𝓘 x) * deriv 𝓘 x +
           (2 * 𝓘 x) * (-(𝓘 x)⁻¹))
         x
@@ -1047,19 +1047,19 @@ lemma hasDerivAt_bobkovG
   := by
   intro c x hx
   have l_shift
-    : HasDerivAt (λ y : ℝ => c + y) 1 x
+    : HasDerivAt (fun y : ℝ => c + y) 1 x
     := by
     exact (hasDerivAt_id x).const_add c
   have l_comp
     : HasDerivAt
-        (λ y : ℝ => (𝓘 (c + y)) ^ 2)
+        (fun y : ℝ => (𝓘 (c + y)) ^ 2)
         (2 * 𝓘 (c + x) * deriv 𝓘 (c + x))
         x
     := by
     simpa only [Function.comp_def, mul_one]
       using (hasDerivAt_gaussianI_pow_two hx).comp x l_shift
   have l_sq
-    : HasDerivAt (λ y : ℝ => y ^ 2) (2 * x) x
+    : HasDerivAt (fun y : ℝ => y ^ 2) (2 * x) x
     := by
     simpa only [id_eq, Nat.cast_ofNat, Nat.reduceSub, pow_one, mul_one]
       using (hasDerivAt_id x).fun_pow 2
@@ -1075,19 +1075,19 @@ lemma hasDerivAt_deriv_bobkovG
   := by
   intro c x hx
   have l_shift
-    : HasDerivAt (λ y : ℝ => c + y) 1 x
+    : HasDerivAt (fun y : ℝ => c + y) 1 x
     := by
     exact (hasDerivAt_id x).const_add c
   have l_comp
     : HasDerivAt
-        (λ y : ℝ => deriv (λ z : ℝ => (𝓘 z) ^ 2) (c + y))
+        (fun y : ℝ => deriv (fun z : ℝ => (𝓘 z) ^ 2) (c + y))
         (2 * ((deriv 𝓘 (c + x)) ^ 2 - 1))
         x
     := by
     simpa only [Function.comp_def, mul_one]
       using (hasDerivAt_deriv_of_gaussianI_pow_two hx).comp x l_shift
   have l_linear
-    : HasDerivAt (λ y : ℝ => 2 * y) 2 x
+    : HasDerivAt (fun y : ℝ => 2 * y) 2 x
     := by
     simpa only [id_eq, mul_one]
       using (hasDerivAt_id x).const_mul 2
@@ -1134,14 +1134,14 @@ lemma hasDerivAt_bobkovR
     exact hasDerivAt_bobkovG l_minus_in
   have l_minus
     : HasDerivAt
-        (λ y : ℝ => bobkovG c (-y))
+        (fun y : ℝ => bobkovG c (-y))
         (-deriv (bobkovG c) (-x))
         x
     := by
     simpa only [Function.comp_def, mul_neg_one]
       using l_minus_at.comp x (hasDerivAt_id x).neg
   have l_sq
-    : HasDerivAt (λ y : ℝ => y ^ 2) (2 * x) x
+    : HasDerivAt (fun y : ℝ => y ^ 2) (2 * x) x
     := by
     simpa only [id_eq, Nat.cast_ofNat, Nat.reduceSub, pow_one, mul_one]
       using (hasDerivAt_id x).fun_pow 2
@@ -1180,7 +1180,7 @@ lemma hasDerivAt_deriv_bobkovR
     := hasDerivAt_deriv_bobkovG hp
   have l_minus
     : HasDerivAt
-        (λ y : ℝ => deriv (bobkovG c) (-y))
+        (fun y : ℝ => deriv (bobkovG c) (-y))
         (-(2 * (deriv 𝓘 (c - x)) ^ 2))
         x
     := by
@@ -1189,7 +1189,7 @@ lemma hasDerivAt_deriv_bobkovR
         (hasDerivAt_id x).neg
   have l_linear
     : HasDerivAt
-        (λ y : ℝ => 4 * (deriv 𝓘 c) ^ 2 * y)
+        (fun y : ℝ => 4 * (deriv 𝓘 c) ^ 2 * y)
         (4 * (deriv 𝓘 c) ^ 2)
         x
     := by
@@ -1207,11 +1207,11 @@ lemma hasDerivAt_deriv_bobkovR
   rw [l_value] at l_base
   apply l_base.congr_of_eventuallyEq
   have l_shift_plus
-    : HasDerivAt (λ y : ℝ => c + y) 1 x
+    : HasDerivAt (fun y : ℝ => c + y) 1 x
     := by
     exact (hasDerivAt_id x).const_add c
   have l_shift_minus
-    : HasDerivAt (λ y : ℝ => c - y) (-1) x
+    : HasDerivAt (fun y : ℝ => c - y) (-1) x
     := by
     simpa only [id_eq] using (hasDerivAt_id x).const_sub c
   filter_upwards
@@ -1338,7 +1338,7 @@ lemma hasDerivAt_bobkovU
     exact hasDerivAt_bobkovG l_minus_in
   have l_minus
     : HasDerivAt
-        (λ y : ℝ => bobkovG c (-y))
+        (fun y : ℝ => bobkovG c (-y))
         (-deriv (bobkovG c) (-x))
         x
     := by
@@ -1369,7 +1369,7 @@ lemma hasDerivAt_deriv_bobkovU
     := hasDerivAt_deriv_bobkovG hp
   have l_minus
     : HasDerivAt
-        (λ y : ℝ => deriv (bobkovG c) (-y))
+        (fun y : ℝ => deriv (bobkovG c) (-y))
         (-(2 * (deriv 𝓘 (c - x)) ^ 2))
         x
     := by
@@ -1387,11 +1387,11 @@ lemma hasDerivAt_deriv_bobkovU
   rw [l_value] at l_base
   apply l_base.congr_of_eventuallyEq
   have l_shift_plus
-    : HasDerivAt (λ y : ℝ => c + y) 1 x
+    : HasDerivAt (fun y : ℝ => c + y) 1 x
     := by
     exact (hasDerivAt_id x).const_add c
   have l_shift_minus
-    : HasDerivAt (λ y : ℝ => c - y) (-1) x
+    : HasDerivAt (fun y : ℝ => c - y) (-1) x
     := by
     simpa only [id_eq] using (hasDerivAt_id x).const_sub c
   filter_upwards
@@ -1783,7 +1783,7 @@ lemma tendsto_gaussianI_of_tendsto
       x ∈ Icc 0 1 →
       Tendsto f l (𝓝 x) →
       (∀ᶠ t in l, f t ∈ Icc 0 1) →
-      Tendsto (λ t => 𝓘 (f t)) l (𝓝 (𝓘 x))
+      Tendsto (fun t => 𝓘 (f t)) l (𝓝 (𝓘 x))
   := by
   intro l f x hx hf h_in
 
@@ -1808,7 +1808,7 @@ theorem bobkov_two_point
       √((𝓘 b) ^ 2 + ((a - b) / 2) ^ 2)
   := by
   let f : ℝ → ℝ → ℝ :=
-    λ u ε => (u + ε) / (1 + 2 * ε)
+    fun u ε => (u + ε) / (1 + 2 * ε)
 
   have l_in
     : {u ε : ℝ} → u ∈ Icc 0 1 → 0 < ε →
@@ -1827,7 +1827,7 @@ theorem bobkov_two_point
       linarith [hu.2]
 
   have l_eps
-    : Tendsto (λ ε : ℝ => ε) (𝓝[>] 0) (𝓝 0) := by
+    : Tendsto (fun ε : ℝ => ε) (𝓝[>] 0) (𝓝 0) := by
     exact tendsto_id.mono_left nhdsWithin_le_nhds
 
   have l_flim
@@ -1835,12 +1835,12 @@ theorem bobkov_two_point
     intro u
 
     have l_num
-      : Tendsto (λ ε : ℝ => u + ε)
+      : Tendsto (fun ε : ℝ => u + ε)
           (𝓝[>] 0) (𝓝 (u + 0)) := by
       exact tendsto_const_nhds.add l_eps
 
     have l_den
-      : Tendsto (λ ε : ℝ => 1 + 2 * ε)
+      : Tendsto (fun ε : ℝ => 1 + 2 * ε)
           (𝓝[>] 0) (𝓝 (1 + 2 * (0 : ℝ))) := by
       exact tendsto_const_nhds.add
         (tendsto_const_nhds.mul l_eps)
@@ -1863,7 +1863,7 @@ theorem bobkov_two_point
 
   have l_Ilim
     : {u : ℝ} → u ∈ Icc 0 1 →
-        Tendsto (λ ε : ℝ => 𝓘 (f u ε))
+        Tendsto (fun ε : ℝ => 𝓘 (f u ε))
           (𝓝[>] 0) (𝓝 (𝓘 u)) := by
     intro u hu
     exact Lemm.tendsto_gaussianI_of_tendsto
@@ -1882,18 +1882,18 @@ theorem bobkov_two_point
     ring
 
   have l_difference
-    : Tendsto (λ ε : ℝ => (f a ε - f b ε) / 2)
+    : Tendsto (fun ε : ℝ => (f a ε - f b ε) / 2)
         (𝓝[>] 0) (𝓝 ((a - b) / 2)) := by
     exact ((l_flim a).sub (l_flim b)).div_const 2
 
   have l_left
-    : Tendsto (λ ε : ℝ => 2 * 𝓘 (f ((a + b) / 2) ε))
+    : Tendsto (fun ε : ℝ => 2 * 𝓘 (f ((a + b) / 2) ε))
         (𝓝[>] 0) (𝓝 (2 * 𝓘 ((a + b) / 2))) := by
     exact tendsto_const_nhds.mul (l_Ilim l_mid)
 
   have l_right
     : Tendsto
-        (λ ε : ℝ =>
+        (fun ε : ℝ =>
           √((𝓘 (f a ε)) ^ 2 + ((f a ε - f b ε) / 2) ^ 2) +
           √((𝓘 (f b ε)) ^ 2 + ((f a ε - f b ε) / 2) ^ 2))
         (𝓝[>] 0)
