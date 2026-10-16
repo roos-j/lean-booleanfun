@@ -47,31 +47,21 @@ def Φ (t : ℝ) := ∫ s in Iio t, ϕ s
 
 namespace Lemm
 
-lemma ϕ_pos
-  : (t : ℝ) → 0 < ϕ t
-  := by
-  intro t
+lemma ϕ_pos (t : ℝ) : 0 < ϕ t := by
   unfold ϕ
   apply gaussianPDFReal_pos 0 1 t
   norm_num
 
-lemma integrable_ϕ
-  : MeasureTheory.Integrable ϕ
-  := by
+lemma integrable_ϕ : MeasureTheory.Integrable ϕ := by
   unfold ϕ
   exact integrable_gaussianPDFReal 0 1
 
-lemma support_ϕ
-  : support ϕ = univ
-  := by
+lemma support_ϕ : support ϕ = univ := by
   refine support_eq_univ ?_
   intro i
   exact ne_of_gt (ϕ_pos i)
 
-lemma integral_Iio_ϕ_pos
-  : (w : ℝ) → 0 < ∫ s in Iio w, ϕ s
-  := by
-  intro w
+lemma integral_Iio_ϕ_pos (w : ℝ) : 0 < ∫ s in Iio w, ϕ s := by
   refine (MeasureTheory.integral_pos_iff_support_of_nonneg ?_ ?_).mpr ?_
   · change (r : ℝ) → 0 ≤ ϕ r
     exact fun r ↦ le_of_lt (ϕ_pos r)
@@ -81,10 +71,7 @@ lemma integral_Iio_ϕ_pos
     rw [MeasureTheory.Measure.restrict_apply_univ]
     simp only [volume_Iio, ENNReal.zero_lt_top]
 
-lemma integral_Ici_ϕ_pos
-  : (w : ℝ) → 0 < ∫ s in Ici w, ϕ s
-  := by
-  intro w
+lemma integral_Ici_ϕ_pos (w : ℝ) : 0 < ∫ s in Ici w, ϕ s := by
   refine (MeasureTheory.integral_pos_iff_support_of_nonneg ?_ ?_).mpr ?_
   · change (r : ℝ) → 0 ≤ ϕ r
     exact fun r ↦ le_of_lt (ϕ_pos r)
@@ -94,16 +81,12 @@ lemma integral_Ici_ϕ_pos
     rw [MeasureTheory.Measure.restrict_apply_univ]
     simp only [volume_Ici, ENNReal.zero_lt_top]
 
-lemma integral_ϕ_eq_one
-  : ∫ s : ℝ, ϕ s = 1
-  := by
+lemma integral_ϕ_eq_one : ∫ s : ℝ, ϕ s = 1 := by
   unfold ϕ
   refine integral_gaussianPDFReal_eq_one 0 ?_
   norm_num
 
-lemma continuous_Φ
-  : Continuous Φ
-  := by
+lemma continuous_Φ : Continuous Φ := by
   refine continuous_iff_continuousAt.mpr ?_
   intro t
   have l_intgϕ
@@ -119,15 +102,11 @@ lemma continuous_Φ
   refine Iic_mem_nhds ?_
   exact lt_add_one t
 
-lemma tendsto_Φ_atBot
-  : Tendsto Φ atBot (𝓝 0)
-  := by
+lemma tendsto_Φ_atBot : Tendsto Φ atBot (𝓝 0) := by
   unfold Φ
   exact MeasureTheory.tendsto_integral_Iio_zero fun ⦃U⦄ a ↦ a
 
-lemma tendsto_Φ_atTop
-  : Tendsto Φ atTop (𝓝 1)
-  := by
+lemma tendsto_Φ_atTop : Tendsto Φ atTop (𝓝 1) := by
   have l_complement
     : Φ = fun t : ℝ => 1 - ∫ s in Ici t, ϕ s
     := by
@@ -189,18 +168,12 @@ theorem range_Φ : range Φ = Ioo 0 1 := by
 
 namespace Lemm
 
-lemma ϕ_eq
-  : (t : ℝ) → ϕ t = (1 / √(2 * π)) * exp (-(t ^ 2) / 2)
-  := by
-  intro t
+lemma ϕ_eq (t : ℝ) : ϕ t = (1 / √(2 * π)) * exp (-(t ^ 2) / 2) := by
   unfold ϕ
   rw [ProbabilityTheory.gaussianPDFReal_def] -- leansearch.net
   simp [mul_one, sub_zero, one_div]
 
-lemma hasDerivAt_ϕ
-  : (t : ℝ) → HasDerivAt ϕ (-t * ϕ t) t
-  := by
-  intro t
+lemma hasDerivAt_ϕ (t : ℝ) : HasDerivAt ϕ (-t * ϕ t) t := by
   have l_sq
     : HasDerivAt (fun u : ℝ => u ^ 2) (2 * t) t
     := by
@@ -238,17 +211,12 @@ lemma hasDerivAt_ϕ
   rw [l_product_value] at l_prod
   exact l_prod
 
-lemma continuous_ϕ
-  : Continuous ϕ
-  := by
+lemma continuous_ϕ : Continuous ϕ := by
   apply continuous_iff_continuousAt.mpr
   intro t
   exact (hasDerivAt_ϕ t).continuousAt
 
-lemma hasDerivAt_Φ
-  : (t : ℝ) → HasDerivAt Φ (ϕ t) t
-  := by
-  intro t
+lemma hasDerivAt_Φ (t : ℝ) : HasDerivAt Φ (ϕ t) t := by
   have l_primitive
     : Φ = fun u : ℝ => (∫ s in 0..u, ϕ s) + Φ 0
     := by
@@ -271,33 +239,22 @@ lemma hasDerivAt_Φ
   rw [l_primitive]
   exact HasDerivAt.add_const (Φ 0) l_deriv
 
-lemma strictMono_Φ
-  : StrictMono Φ
-  := by
+lemma strictMono_Φ : StrictMono Φ := by
   apply strictMono_of_hasDerivAt_pos hasDerivAt_Φ -- leansearch
   intro t
   exact ϕ_pos t
 
-lemma Φ_mem_Ioo
-  : (t : ℝ) → Φ t ∈ Ioo 0 1
-  := by
-  intro t
+lemma Φ_mem_Ioo (t : ℝ) : Φ t ∈ Ioo 0 1 := by
   rw [← range_Φ]
   exact mem_range_self t
 
-lemma Φ_invFun_id
-  : {x : ℝ} → x ∈ Ioo 0 1 → Φ (invFun Φ x) = x
-  := by
-  intro x hx
+lemma Φ_invFun_id {x : ℝ} (hx : x ∈ Ioo 0 1) : Φ (invFun Φ x) = x := by
   apply invFun_eq
   change x ∈ range Φ
   rw [range_Φ]
   exact hx
 
-lemma continuousAt_invFun_Φ
-  : {x : ℝ} → x ∈ Ioo 0 1 → ContinuousAt (invFun Φ) x
-  := by
-  intro x hx
+lemma continuousAt_invFun_Φ {x : ℝ} (hx: x ∈ Ioo 0 1): ContinuousAt (invFun Φ) x := by
   apply tendsto_order.mpr
   apply And.intro
   · intro a ha
@@ -334,11 +291,7 @@ lemma continuousAt_invFun_Φ
     rw [Φ_invFun_id hy]
     exact hyb
 
-lemma hasDerivAt_invFun_Φ
-  : {x : ℝ} → x ∈ Ioo 0 1
-    → HasDerivAt (invFun Φ) (ϕ (invFun Φ x))⁻¹ x
-  := by
-  intro x hx
+lemma hasDerivAt_invFun_Φ {x : ℝ} (hx : x ∈ Ioo 0 1) : HasDerivAt (invFun Φ) (ϕ (invFun Φ x))⁻¹ x := by
   apply HasDerivAt.of_local_left_inverse
   · exact continuousAt_invFun_Φ hx
   · exact hasDerivAt_Φ (invFun Φ x)
@@ -374,10 +327,7 @@ theorem gaussianI_one : 𝓘 1 = 0 := by
 
 namespace Lemm
 
-lemma gaussianI_eq
-  : {x : ℝ} → x ∈ Ioo 0 1 → 𝓘 x = ϕ (invFun Φ x)
-  := by
-  intro x hx
+lemma gaussianI_eq {x : ℝ} (hx: x ∈ Ioo 0 1) : 𝓘 x = ϕ (invFun Φ x) := by
   unfold gaussianI
   rw [ite_eq_left hx]
   rfl
@@ -449,9 +399,7 @@ theorem deriv_deriv_gaussianI_neg (hx : x ∈ Ioo 0 1) : deriv (deriv 𝓘) x < 
 
 namespace Lemm
 
-lemma tendsto_invFun_Φ_zero
-  : Tendsto (invFun Φ) (𝓝[>] 0) atBot
-  := by
+lemma tendsto_invFun_Φ_zero : Tendsto (invFun Φ) (𝓝[>] 0) atBot := by
   apply tendsto_atBot.mpr -- leansearch
   -- idea: Φ is mono → Φ (invFun Φ a) ≤ Φ b; a ∈ ioo 0 1 → Φ (invFun Φ a) = a; so a ≤ Φ b
   intro b
@@ -469,9 +417,7 @@ lemma tendsto_invFun_Φ_zero
   rw [Φ_invFun_id hx]
   exact le_of_lt hxb
 
-lemma tendsto_invFun_Φ_one
-  : Tendsto (invFun Φ) (𝓝[<] 1) atTop
-  := by
+lemma tendsto_invFun_Φ_one : Tendsto (invFun Φ) (𝓝[<] 1) atTop := by
   -- same ideea
   apply tendsto_atTop.mpr
   intro b
@@ -488,9 +434,7 @@ lemma tendsto_invFun_Φ_one
   rw [Φ_invFun_id hx]
   exact le_of_lt hbx
 
-lemma tendsto_ϕ_atBot
-  : Tendsto ϕ atBot (𝓝 0)
-  := by
+lemma tendsto_ϕ_atBot : Tendsto ϕ atBot (𝓝 0) := by
   have l_sq_atTop
     : Tendsto (fun t : ℝ => t ^ 2) atTop atTop
     := by
@@ -523,9 +467,7 @@ lemma tendsto_ϕ_atBot
   simpa only [mul_zero]
     using l_exp.const_mul (1 / √(2 * π))
 
-lemma tendsto_ϕ_atTop
-  : Tendsto ϕ atTop (𝓝 0)
-  := by
+lemma tendsto_ϕ_atTop : Tendsto ϕ atTop (𝓝 0) := by
   have l_sq
     : Tendsto (fun t : ℝ => t ^ 2) atTop atTop
     := by
@@ -552,9 +494,7 @@ lemma tendsto_ϕ_atTop
   simpa only [mul_zero]
     using l_exp.const_mul (1 / √(2 * π))
 
-lemma tendsto_gaussianI_zero
-  : Tendsto 𝓘 (𝓝[>] 0) (𝓝 0)
-  := by
+lemma tendsto_gaussianI_zero : Tendsto 𝓘 (𝓝[>] 0) (𝓝 0) := by
   have l_comp
     : Tendsto (ϕ ∘ invFun Φ) (𝓝[>] 0) (𝓝 0)
     := by
@@ -570,9 +510,7 @@ lemma tendsto_gaussianI_zero
   exact (gaussianI_eq hx).symm
 
 
-lemma tendsto_gaussianI_one
-  : Tendsto 𝓘 (𝓝[<] 1) (𝓝 0)
-  := by
+lemma tendsto_gaussianI_one : Tendsto 𝓘 (𝓝[<] 1) (𝓝 0) := by
   have l_comp
     : Tendsto (ϕ ∘ invFun Φ) (𝓝[<] 1) (𝓝 0)
     := by
@@ -587,9 +525,7 @@ lemma tendsto_gaussianI_one
   filter_upwards [l_in] with x hx
   exact (gaussianI_eq hx).symm
 
-lemma continuousOn_gaussianI
-  : ContinuousOn 𝓘 (Icc 0 1)
-  := by
+lemma continuousOn_gaussianI : ContinuousOn 𝓘 (Icc 0 1) := by
   intro x hx
 
   by_cases hx0 : x = 0
@@ -683,15 +619,8 @@ section twopoint_inequality
 
 namespace Lemm
 
-lemma hasDerivAt_deriv_gaussianI_pow_two
-  : {x : ℝ} → x ∈ Ioo 0 1
-    → HasDerivAt
-        (fun y : ℝ => (deriv 𝓘 y) ^ 2)
-        (-2 * deriv 𝓘 x / 𝓘 x)
-        x
-  := by
-  intro x hx
-
+lemma hasDerivAt_deriv_gaussianI_pow_two {x : ℝ} (hx : x ∈ Ioo 0 1) :
+  HasDerivAt (fun y : ℝ => (deriv 𝓘 y) ^ 2) (-2 * deriv 𝓘 x / 𝓘 x) x := by
   have l_sq
     : HasDerivAt
         (fun y : ℝ => (deriv 𝓘 y) ^ 2)
@@ -711,15 +640,8 @@ lemma hasDerivAt_deriv_gaussianI_pow_two
   rw [l_value] at l_sq
   exact l_sq
 
-lemma hasDerivAt_deriv_deriv_gaussianI_pow_two
-  : {x : ℝ} → x ∈ Ioo 0 1
-    → HasDerivAt
-        (deriv (fun y : ℝ => (deriv 𝓘 y) ^ 2))
-        (2 * (1 + (deriv 𝓘 x) ^ 2) / (𝓘 x) ^ 2)
-        x
-  := by
-  intro x hx
-
+lemma hasDerivAt_deriv_deriv_gaussianI_pow_two {x : ℝ} (hx: x ∈ Ioo 0 1) :
+  HasDerivAt (deriv (fun y : ℝ => (deriv 𝓘 y) ^ 2)) (2 * (1 + (deriv 𝓘 x) ^ 2) / (𝓘 x) ^ 2) x := by
   have l_nonzero
     : 𝓘 x ≠ 0
     := ne_of_gt (gaussianI_pos hx)
@@ -747,9 +669,7 @@ lemma hasDerivAt_deriv_deriv_gaussianI_pow_two
   filter_upwards [Ioo_mem_nhds hx.1 hx.2] with y hy
   exact (hasDerivAt_deriv_gaussianI_pow_two hy).deriv
 
-lemma convexOn_deriv_gaussianI_pow_two
-  : ConvexOn ℝ (Ioo 0 1) (fun x : ℝ => (deriv 𝓘 x) ^ 2)
-  := by
+lemma convexOn_deriv_gaussianI_pow_two : ConvexOn ℝ (Ioo 0 1) (fun x : ℝ => (deriv 𝓘 x) ^ 2) := by
   apply convexOn_of_deriv2_nonneg'
   · exact convex_Ioo 0 1
   · intro x hx
@@ -761,19 +681,14 @@ lemma convexOn_deriv_gaussianI_pow_two
     rw [(hasDerivAt_deriv_deriv_gaussianI_pow_two hx).deriv]
     positivity
 
-lemma ϕ_neg
-  : (t : ℝ) → ϕ (-t) = ϕ t
+lemma ϕ_neg (t : ℝ) : ϕ (-t) = ϕ t
   := by
-  intro t
   simp only [ϕ_eq, neg_sq]
 
-lemma Φ_neg
-  : (t : ℝ) → Φ (-t) = 1 - Φ t
+lemma Φ_neg (t : ℝ) : Φ (-t) = 1 - Φ t
   := by
-  intro t
   have l_deriv
-    : (u : ℝ)
-    →   HasDerivAt (fun v : ℝ => Φ (-v) + Φ v) 0 u
+    : (u : ℝ) → HasDerivAt (fun v : ℝ => Φ (-v) + Φ v) 0 u
     := by
     intro u
     have l_neg
@@ -819,11 +734,7 @@ lemma Φ_neg
 
   exact (eq_sub_iff_add_eq).mpr l_sum
 
-lemma invFun_Φ_one_sub
-  : {x : ℝ} → x ∈ Ioo 0 1
-    → invFun Φ (1 - x) = -invFun Φ x
-  := by
-  intro x hx
+lemma invFun_Φ_one_sub {x : ℝ} (hx : x ∈ Ioo 0 1) : invFun Φ (1 - x) = -invFun Φ x := by
   have l_in
     : 1 - x ∈ Ioo 0 1
     := by
@@ -833,10 +744,7 @@ lemma invFun_Φ_one_sub
   apply strictMono_Φ.injective
   rw [Φ_invFun_id l_in, Φ_neg, Φ_invFun_id hx]
 
-lemma gaussianI_one_sub
-  : (x : ℝ) → 𝓘 (1 - x) = 𝓘 x
-  := by
-  intro x
+lemma gaussianI_one_sub (x : ℝ) : 𝓘 (1 - x) = 𝓘 x := by
   by_cases hx : x ∈ Ioo 0 1
   · have l_in
       : 1 - x ∈ Ioo 0 1
@@ -856,11 +764,7 @@ lemma gaussianI_one_sub
       · linarith [hy.1]
     simp only [gaussianI, ite_eq_right l_out, ite_eq_right hx]
 
-lemma deriv_gaussianI_one_sub
-  : {x : ℝ} → x ∈ Ioo 0 1
-    → deriv 𝓘 (1 - x) = -deriv 𝓘 x
-  := by
-  intro x hx
+lemma deriv_gaussianI_one_sub {x : ℝ} (hx : x ∈ Ioo 0 1) : deriv 𝓘 (1 - x) = -deriv 𝓘 x := by
   have l_in
     : 1 - x ∈ Ioo 0 1
     := by
@@ -870,18 +774,12 @@ lemma deriv_gaussianI_one_sub
   rw [deriv_gaussianI l_in, deriv_gaussianI hx,
     invFun_Φ_one_sub hx]
 
-lemma deriv_gaussianI_pow_two_one_sub
-  : {x : ℝ} → x ∈ Ioo 0 1
-    → (deriv 𝓘 (1 - x)) ^ 2 = (deriv 𝓘 x) ^ 2
-  := by
-  intro x hx
+lemma deriv_gaussianI_pow_two_one_sub {x : ℝ} (hx : x ∈ Ioo 0 1) :
+  (deriv 𝓘 (1 - x)) ^ 2 = (deriv 𝓘 x) ^ 2 := by
   rw [deriv_gaussianI_one_sub hx, neg_sq]
 
-lemma deriv_gaussianI_pow_two_le_of_mem_Icc
-  : {a b : ℝ} → a ∈ Ioo 0 1 → b ∈ Icc a (1 - a)
-    → (deriv 𝓘 b) ^ 2 ≤ (deriv 𝓘 a) ^ 2
-  := by
-  intro a b ha hb
+lemma deriv_gaussianI_pow_two_le_of_mem_Icc {a b : ℝ} (ha : a ∈ Ioo 0 1) (hb : b ∈ Icc a (1 - a)) :
+  (deriv 𝓘 b) ^ 2 ≤ (deriv 𝓘 a) ^ 2 := by
   have l_reflected
     : 1 - a ∈ Ioo 0 1
     := by
@@ -897,11 +795,7 @@ lemma deriv_gaussianI_pow_two_le_of_mem_Icc
   rw [deriv_gaussianI_pow_two_one_sub ha, max_self] at l_bound
   exact l_bound
 
-lemma gaussianI_le_of_mem_Icc
-  : {a b : ℝ} → a ∈ Icc 0 1 → b ∈ Icc a (1 - a)
-    → 𝓘 a ≤ 𝓘 b
-  := by
-  intro a b ha hb
+lemma gaussianI_le_of_mem_Icc {a b : ℝ} (ha: a ∈ Icc 0 1) (hb : b ∈ Icc a (1 - a)) : 𝓘 a ≤ 𝓘 b := by
   have l_reflected
     : 1 - a ∈ Icc 0 1
     := by
@@ -916,14 +810,8 @@ lemma gaussianI_le_of_mem_Icc
   rw [gaussianI_one_sub, min_self] at l_bound
   exact l_bound
 
-lemma hasDerivAt_gaussianI_pow_two
-  : {x : ℝ} → x ∈ Ioo 0 1
-    → HasDerivAt
-        (fun y : ℝ => (𝓘 y) ^ 2)
-        (2 * 𝓘 x * deriv 𝓘 x)
-        x
-  := by
-  intro x hx
+lemma hasDerivAt_gaussianI_pow_two {x : ℝ} (hx: x ∈ Ioo 0 1) :
+  HasDerivAt (fun y : ℝ => (𝓘 y) ^ 2) (2 * 𝓘 x * deriv 𝓘 x) x := by
   have l_first
     : HasDerivAt 𝓘 (deriv 𝓘 x) x
     := by
@@ -932,14 +820,8 @@ lemma hasDerivAt_gaussianI_pow_two
   simpa only [Nat.cast_ofNat, Nat.reduceSub, pow_one]
     using l_first.fun_pow 2
 
-lemma hasDerivAt_deriv_of_gaussianI_pow_two
-  : {x : ℝ} → x ∈ Ioo 0 1
-    → HasDerivAt
-        (deriv (fun y : ℝ => (𝓘 y) ^ 2))
-        (2 * ((deriv 𝓘 x) ^ 2 - 1))
-        x
-  := by
-  intro x hx
+lemma hasDerivAt_deriv_of_gaussianI_pow_two {x : ℝ} (hx : x ∈ Ioo 0 1) :
+HasDerivAt (deriv (fun y : ℝ => (𝓘 y) ^ 2)) (2 * ((deriv 𝓘 x) ^ 2 - 1)) x := by
   have l_nonzero
     : 𝓘 x ≠ 0
     := ne_of_gt (gaussianI_pos hx)
@@ -971,14 +853,8 @@ lemma hasDerivAt_deriv_of_gaussianI_pow_two
 -- bobkov p. 212
 def bobkovG (c x : ℝ) := (𝓘 (c + x)) ^ 2 + x ^ 2
 
-lemma hasDerivAt_bobkovG
-  : {c x : ℝ} → c + x ∈ Ioo 0 1
-    → HasDerivAt
-        (bobkovG c)
-        (2 * 𝓘 (c + x) * deriv 𝓘 (c + x) + 2 * x)
-        x
+lemma hasDerivAt_bobkovG {c x : ℝ} (hx : c + x ∈ Ioo 0 1) : HasDerivAt (bobkovG c) (2 * 𝓘 (c + x) * deriv 𝓘 (c + x) + 2 * x) x
   := by
-  intro c x hx
   have l_shift
     : HasDerivAt (fun y : ℝ => c + y) 1 x
     := by
@@ -999,14 +875,7 @@ lemma hasDerivAt_bobkovG
   unfold bobkovG
   exact l_comp.fun_add l_sq
 
-lemma hasDerivAt_deriv_bobkovG
-  : {c x : ℝ} → c + x ∈ Ioo 0 1
-    → HasDerivAt
-        (deriv (bobkovG c))
-        (2 * (deriv 𝓘 (c + x)) ^ 2)
-        x
-  := by
-  intro c x hx
+lemma hasDerivAt_deriv_bobkovG {c x : ℝ} (hx : c + x ∈ Ioo 0 1): HasDerivAt (deriv (bobkovG c)) (2 * (deriv 𝓘 (c + x)) ^ 2) x := by
   have l_shift
     : HasDerivAt (fun y : ℝ => c + y) 1 x
     := by
@@ -1038,19 +907,10 @@ lemma hasDerivAt_deriv_bobkovG
   rw [(hasDerivAt_bobkovG hy).deriv,
     (hasDerivAt_gaussianI_pow_two hy).deriv]
 
-def bobkovR (c x : ℝ) :=
-  bobkovG c x + bobkovG c (-x) - 2 * bobkovG c 0 -
-    2 * (deriv 𝓘 c) ^ 2 * x ^ 2
+def bobkovR (c x : ℝ) := bobkovG c x + bobkovG c (-x) - 2 * bobkovG c 0 - 2 * (deriv 𝓘 c) ^ 2 * x ^ 2
 
-lemma hasDerivAt_bobkovR
-  : {c x : ℝ} → c + x ∈ Ioo 0 1 → c - x ∈ Ioo 0 1
-    → HasDerivAt
-        (bobkovR c)
-        (deriv (bobkovG c) x - deriv (bobkovG c) (-x) -
-          4 * (deriv 𝓘 c) ^ 2 * x)
-        x
-  := by
-  intro c x hp hm
+lemma hasDerivAt_bobkovR {c x : ℝ} (hp : c + x ∈ Ioo 0 1) (hm : c - x ∈ Ioo 0 1) :
+  HasDerivAt (bobkovR c) (deriv (bobkovG c) x - deriv (bobkovG c) (-x) - 4 * (deriv 𝓘 c) ^ 2 * x) x := by
   have l_minus_in
     : c + (-x) ∈ Ioo 0 1
     := by
@@ -1092,15 +952,8 @@ lemma hasDerivAt_bobkovR
   unfold bobkovR
   exact l_base
 
-lemma hasDerivAt_deriv_bobkovR
-  : {c x : ℝ} → c + x ∈ Ioo 0 1 → c - x ∈ Ioo 0 1
-    → HasDerivAt
-        (deriv (bobkovR c))
-        (2 * ((deriv 𝓘 (c + x)) ^ 2 +
-          (deriv 𝓘 (c - x)) ^ 2 - 2 * (deriv 𝓘 c) ^ 2))
-        x
-  := by
-  intro c x hp hm
+lemma hasDerivAt_deriv_bobkovR {c x : ℝ} (hp : c + x ∈ Ioo 0 1) (hm : c - x ∈ Ioo 0 1) :
+HasDerivAt (deriv (bobkovR c)) (2 * ((deriv 𝓘 (c + x)) ^ 2 + (deriv 𝓘 (c - x)) ^ 2 - 2 * (deriv 𝓘 c) ^ 2)) x := by
   have l_minus_in
     : c + (-x) ∈ Ioo 0 1
     := by
@@ -1153,11 +1006,8 @@ lemma hasDerivAt_deriv_bobkovR
     with y hyp hym
   exact (hasDerivAt_bobkovR hyp hym).deriv
 
-lemma convexOn_bobkovR
-  : {c t : ℝ} → c + t ∈ Ioo 0 1 → c - t ∈ Ioo 0 1
-    → ConvexOn ℝ (Icc (-t) t) (bobkovR c)
+lemma convexOn_bobkovR {c t : ℝ} (hp : c + t ∈ Ioo 0 1) (hm : c - t ∈ Ioo 0 1) : ConvexOn ℝ (Icc (-t) t) (bobkovR c)
   := by
-  intro c t hp hm
   have l_in
     : {y : ℝ} → y ∈ Icc (-t) t
     →   c + y ∈ Ioo 0 1 ∧ c - y ∈ Ioo 0 1
@@ -1195,13 +1045,8 @@ lemma convexOn_bobkovR
     rw [l_center] at l_mid
     linarith
 
-lemma bobkovG_sum_lower_bound
-  : {c x : ℝ} → 0 ≤ x
-    → c + x ∈ Ioo 0 1 → c - x ∈ Ioo 0 1
-    → 2 * (deriv 𝓘 c) ^ 2 * x ^ 2 ≤
-        bobkovG c x + bobkovG c (-x) - 2 * bobkovG c 0
-  := by
-  intro c x hx hp hm
+lemma bobkovG_sum_lower_bound {c x : ℝ} (hx : 0 ≤ x) (hp: c + x ∈ Ioo 0 1) (hm : c - x ∈ Ioo 0 1) :
+  2 * (deriv 𝓘 c) ^ 2 * x ^ 2 ≤ bobkovG c x + bobkovG c (-x) - 2 * bobkovG c 0 := by
   have l_even
     : bobkovR c (-x) = bobkovR c x
     := by
@@ -1242,14 +1087,9 @@ lemma bobkovG_sum_lower_bound
 -- idk how to "Fix c ∈ (0, 1)"
 def bobkovU (c x : ℝ) := bobkovG c x - bobkovG c (-x)
 
-lemma hasDerivAt_bobkovU
-  : {c x : ℝ} → c + x ∈ Ioo 0 1 → c - x ∈ Ioo 0 1
-    → HasDerivAt
-        (bobkovU c)
-        (deriv (bobkovG c) x + deriv (bobkovG c) (-x))
-        x
+lemma hasDerivAt_bobkovU{c x : ℝ} (hp : c + x ∈ Ioo 0 1) (hm : c - x ∈ Ioo 0 1) :
+  HasDerivAt (bobkovU c) (deriv (bobkovG c) x + deriv (bobkovG c) (-x)) x
   := by
-  intro c x hp hm
   have l_minus_in
     : c + (-x) ∈ Ioo 0 1
     := by
@@ -1276,15 +1116,9 @@ lemma hasDerivAt_bobkovU
   simpa only [sub_neg_eq_add]
     using l_plus.fun_sub l_minus
 
-lemma hasDerivAt_deriv_bobkovU
-  : {c x : ℝ} → c + x ∈ Ioo 0 1 → c - x ∈ Ioo 0 1
-    → HasDerivAt
-        (deriv (bobkovU c))
-        (2 * ((deriv 𝓘 (c + x)) ^ 2 -
-          (deriv 𝓘 (c - x)) ^ 2))
-        x
+lemma hasDerivAt_deriv_bobkovU{c x : ℝ} (hp : c + x ∈ Ioo 0 1) (hm : c - x ∈ Ioo 0 1) :
+  HasDerivAt (deriv (bobkovU c)) (2 * ((deriv 𝓘 (c + x)) ^ 2 - (deriv 𝓘 (c - x)) ^ 2)) x
   := by
-  intro c x hp hm
   have l_minus_in
     : c + (-x) ∈ Ioo 0 1
     := by
