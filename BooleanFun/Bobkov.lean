@@ -1162,12 +1162,8 @@ lemma hasDerivAt_deriv_bobkovU{c x : ℝ} (hp : c + x ∈ Ioo 0 1) (hm : c - x �
     with y hyp hym
   exact (hasDerivAt_bobkovU hyp hym).deriv
 
-lemma concaveOn_bobkovU
-  : {c t : ℝ} → c ≤ 1 / 2
-    → c + t ∈ Ioo 0 1 → c - t ∈ Ioo 0 1
-    → ConcaveOn ℝ (Icc 0 t) (bobkovU c)
-  := by
-  intro c t hc hp hm
+lemma concaveOn_bobkovU {c t : ℝ} (hc : c ≤ 1 / 2) (hp : c + t ∈ Ioo 0 1) (hm : c - t ∈ Ioo 0 1) :
+  ConcaveOn ℝ (Icc 0 t) (bobkovU c) := by
   have l_in
     : {y : ℝ} → y ∈ Icc 0 t
     →   c + y ∈ Ioo 0 1 ∧ c - y ∈ Ioo 0 1
@@ -1203,12 +1199,8 @@ lemma concaveOn_bobkovU
     linarith
 
 -- Bobkov 22
-lemma bobkovU_upper_bound
-  : {c x : ℝ} → 0 ≤ x → c ≤ 1 / 2
-    → c + x ∈ Ioo 0 1 → c - x ∈ Ioo 0 1
-    → bobkovU c x ≤ 4 * 𝓘 c * deriv 𝓘 c * x
-  := by
-  intro c x hx hc hp hm
+lemma bobkovU_upper_bound {c x : ℝ} (hx: 0 ≤ x) (hc: c ≤ 1 / 2) (hp: c + x ∈ Ioo 0 1) (hm: c - x ∈ Ioo 0 1) :
+  bobkovU c x ≤ 4 * 𝓘 c * deriv 𝓘 c * x := by
   by_cases hx0 : x = 0
   · subst x
     simp [bobkovU]
@@ -1260,13 +1252,8 @@ lemma bobkovU_upper_bound
   simp only [slope_def_field, l_zero, sub_zero] at l_slope
   exact (div_le_iff₀ l_positive).mp l_slope
 
-lemma bobkovU_nonneg
-  : {c x : ℝ} → 0 ≤ x → c ≤ 1 / 2
-    → c + x ∈ Ioo 0 1 → c - x ∈ Ioo 0 1
-    → 0 ≤ bobkovU c x
-  := by
-  intro c x hx hc hp hm
-
+lemma bobkovU_nonneg {c x : ℝ} (hx: 0 ≤ x) (hc: c ≤ 1 / 2) (hp: c + x ∈ Ioo 0 1) (hm: c - x ∈ Ioo 0 1) :
+  0 ≤ bobkovU c x := by
   have l_left : c - x ∈ Icc 0 1 := by
     exact ⟨le_of_lt hm.1, le_of_lt hm.2⟩
 
@@ -1295,14 +1282,9 @@ lemma bobkovU_nonneg
   nlinarith [l_product]
 
 -- bobkov 20
-lemma bobkovU_sq_le
-  : {c x : ℝ} → 0 ≤ x → c ≤ 1 / 2
-    → c + x ∈ Ioo 0 1 → c - x ∈ Ioo 0 1
-    → (bobkovU c x) ^ 2 ≤
-        8 * (𝓘 c) ^ 2 * (bobkovG c x + bobkovG c (-x) - 2 * bobkovG c 0)
+lemma bobkovU_sq_le {c x : ℝ} (hx: 0 ≤ x) (hc: c ≤ 1 / 2) (hp: c + x ∈ Ioo 0 1) (hm: c - x ∈ Ioo 0 1) :
+(bobkovU c x) ^ 2 ≤ 8 * (𝓘 c) ^ 2 * (bobkovG c x + bobkovG c (-x) - 2 * bobkovG c 0)
   := by
-  intro c x hx hc hp hm
-
   have l_nonneg : 0 ≤ bobkovU c x := by
     exact bobkovU_nonneg hx hc hp hm
 
@@ -1342,13 +1324,8 @@ lemma bobkovU_sq_le
           (bobkovG c x + bobkovG c (-x) - 2 * bobkovG c 0) := by
       exact mul_le_mul_of_nonneg_left l_sum (by positivity)
 
-lemma bobkov_sqrt_bound
-  : {p A B : ℝ} → 0 ≤ p → 0 ≤ A → 0 ≤ B
-    → (A - B) ^ 2 ≤ 8 * p ^ 2 * (A + B - 2 * p ^ 2)
-    → 2 * p ≤ √A + √B
-  := by
-  intro p A B hp hA hB h_bound
-
+lemma bobkov_sqrt_bound {p A B : ℝ} (hA: 0 ≤ A ) (hB: 0 ≤ B) (h_bound: (A - B) ^ 2 ≤ 8 * p ^ 2 * (A + B - 2 * p ^ 2)) :
+  2 * p ≤ √A + √B := by
   have l_sqrtA_nonneg : 0 ≤ √A := sqrt_nonneg A
   have l_sqrtB_nonneg : 0 ≤ √B := sqrt_nonneg B
   have l_sqrtA_sq : (√A) ^ 2 = A := sq_sqrt hA
@@ -1394,22 +1371,12 @@ lemma bobkov_sqrt_bound
   nlinarith only [h_bound, l_final_product, l_sqrt_product_sq]
 
 -- bobkov 17
-lemma bobkov_two_point_centered
-  : {c x : ℝ} → 0 ≤ x → c ≤ 1 / 2
-    → c + x ∈ Ioo 0 1 → c - x ∈ Ioo 0 1
-    → 2 * 𝓘 c ≤
-        √((𝓘 (c + x)) ^ 2 + x ^ 2) +
-        √((𝓘 (c - x)) ^ 2 + x ^ 2)
-  := by
-  intro c x hx hc hp hm
-
+lemma bobkov_two_point_centered {c x : ℝ} (hx: 0 ≤ x) (hc: c ≤ 1 / 2) (hp: c + x ∈ Ioo 0 1) (hm: c - x ∈ Ioo 0 1) :
+  2 * 𝓘 c ≤ √((𝓘 (c + x)) ^ 2 + x ^ 2) + √((𝓘 (c - x)) ^ 2 + x ^ 2) := by
   have l_center : c ∈ Ioo 0 1 := by
     constructor
     · linarith [hm.1]
     · linarith [hp.2]
-
-  have l_nonneg : 0 ≤ 𝓘 c := by
-    exact le_of_lt (gaussianI_pos l_center)
 
   have l_plus_nonneg : 0 ≤ bobkovG c x := by
     unfold bobkovG
@@ -1433,8 +1400,7 @@ lemma bobkov_two_point_centered
 
   have l_result
     : 2 * 𝓘 c ≤ √(bobkovG c x) + √(bobkovG c (-x)) := by
-    exact bobkov_sqrt_bound
-      l_nonneg l_plus_nonneg l_minus_nonneg l_bound
+    exact bobkov_sqrt_bound l_plus_nonneg l_minus_nonneg l_bound
 
   simpa only [bobkovG, neg_sq, ← sub_eq_add_neg] using l_result
 
@@ -1525,15 +1491,8 @@ lemma bobkov_two_point_interior {a b : ℝ} (ha: a ∈ Ioo 0 1) (hb: b ∈ Ioo 0
     linarith only [l_swapped]
 
 lemma tendsto_gaussianI_of_tendsto
-  {α : Type*}
-  : {l : Filter α} → {f : α → ℝ} → {x : ℝ} →
-      x ∈ Icc 0 1 →
-      Tendsto f l (𝓝 x) →
-      (∀ᶠ t in l, f t ∈ Icc 0 1) →
-      Tendsto (fun t => 𝓘 (f t)) l (𝓝 (𝓘 x))
-  := by
-  intro l f x hx hf h_in
-
+  {α : Type*} {l : Filter α} {f : α → ℝ} {x : ℝ}  (hx: x ∈ Icc 0 1) (hf: Tendsto f l (𝓝 x)) (h_in: (∀ᶠ t in l, f t ∈ Icc 0 1)) :
+    Tendsto (fun t => 𝓘 (f t)) l (𝓝 (𝓘 x)) := by
   have l_within : Tendsto f l (𝓝[Icc 0 1] x) := by
     exact tendsto_nhdsWithin_iff.mpr ⟨hf, h_in⟩
 
