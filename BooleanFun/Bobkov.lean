@@ -73,14 +73,11 @@ lemma integral_Iio_ϕ_pos
   := by
   intro w
   refine (MeasureTheory.integral_pos_iff_support_of_nonneg ?_ ?_).mpr ?_
-  .
-    change (r : ℝ) → 0 ≤ ϕ r
+  · change (r : ℝ) → 0 ≤ ϕ r
     exact fun r ↦ le_of_lt (ϕ_pos r)
-  .
-    apply MeasureTheory.Integrable.restrict
+  · apply MeasureTheory.Integrable.restrict
     exact integrable_ϕ
-  .
-    rw [support_ϕ]
+  · rw [support_ϕ]
     rw [MeasureTheory.Measure.restrict_apply_univ]
     simp only [volume_Iio, ENNReal.zero_lt_top]
 
@@ -89,14 +86,11 @@ lemma integral_Ici_ϕ_pos
   := by
   intro w
   refine (MeasureTheory.integral_pos_iff_support_of_nonneg ?_ ?_).mpr ?_
-  .
-    change (r : ℝ) → 0 ≤ ϕ r
+  · change (r : ℝ) → 0 ≤ ϕ r
     exact fun r ↦ le_of_lt (ϕ_pos r)
-  .
-    apply MeasureTheory.Integrable.restrict
+  · apply MeasureTheory.Integrable.restrict
     exact integrable_ϕ
-  .
-    rw [support_ϕ]
+  · rw [support_ϕ]
     rw [MeasureTheory.Measure.restrict_apply_univ]
     simp only [volume_Ici, ENNReal.zero_lt_top]
 
@@ -165,10 +159,8 @@ theorem range_Φ
     | intro w h =>
       rw [← h]
       apply And.intro
-      .
-        exact Lemm.integral_Iio_ϕ_pos w
-      .
-        unfold Φ
+      · exact Lemm.integral_Iio_ϕ_pos w
+      · unfold Φ
         have l_intg_split
           : (∫ (s : ℝ) in Iio w, ϕ s) + (∫ (s : ℝ) in Ici w, ϕ s) =
               (∫ (s : ℝ), ϕ s)
@@ -181,21 +173,17 @@ theorem range_Φ
         exact lt_add_of_pos_right
           (∫ (s : ℝ) in Iio w, ϕ s)
           (Lemm.integral_Ici_ϕ_pos w)
-  .
-    intro hy
+  · intro hy
     cases hy with
     | intro g0 l1 =>
       change x ∈ range Φ
       refine mem_range_of_exists_le_of_exists_ge ?_ ?_ ?_
-      .
-        exact Lemm.continuous_Φ
-      .
-        obtain ⟨w, hw⟩ :=
+      · exact Lemm.continuous_Φ
+      · obtain ⟨w, hw⟩ :=
           (Lemm.tendsto_Φ_atBot.eventually_lt_const g0).exists
         apply Exists.intro w
         exact le_of_lt hw
-      .
-        -- https://leanprover-community.github.io/mathlib4_docs/Mathlib/Topology/Order/OrderClosed.html#Filter.Tendsto.eventually_const_lt (leansearch.net)
+      ·     -- https://leanprover-community.github.io/mathlib4_docs/Mathlib/Topology/Order/OrderClosed.html#Filter.Tendsto.eventually_const_lt (leansearch.net)
         obtain ⟨w, hw⟩ :=
           (Lemm.tendsto_Φ_atTop.eventually_const_lt l1).exists
         apply Exists.intro w
@@ -278,12 +266,9 @@ lemma hasDerivAt_Φ
     : HasDerivAt (fun u : ℝ => ∫ s in 0..u, ϕ s) (ϕ t) t
     := by
     apply integral_hasDerivAt_right
-    .
-      exact integrable_ϕ.intervalIntegrable
-    .
-      exact continuous_ϕ.stronglyMeasurable.stronglyMeasurableAtFilter
-    .
-      exact continuous_ϕ.continuousAt
+    ·   exact integrable_ϕ.intervalIntegrable
+    ·   exact continuous_ϕ.stronglyMeasurable.stronglyMeasurableAtFilter
+    ·   exact continuous_ϕ.continuousAt
 
   rw [l_primitive]
   exact HasDerivAt.add_const (Φ 0) l_deriv
@@ -317,8 +302,7 @@ lemma continuousAt_invFun_Φ
   intro x hx
   apply tendsto_order.mpr
   apply And.intro
-  .
-    intro a ha
+  · intro a ha
     have l_ax
       : Φ a < x
       := by
@@ -335,8 +319,7 @@ lemma continuousAt_invFun_Φ
     apply strictMono_Φ.lt_iff_lt.mp
     rw [Φ_invFun_id hy]
     exact hay
-  .
-    intro b hb
+  · intro b hb
     have l_xb
       : x < Φ b
       := by
@@ -359,14 +342,10 @@ lemma hasDerivAt_invFun_Φ
   := by
   intro x hx
   apply HasDerivAt.of_local_left_inverse
-  .
-    exact continuousAt_invFun_Φ hx
-  .
-    exact hasDerivAt_Φ (invFun Φ x)
-  .
-    exact ne_of_gt (ϕ_pos (invFun Φ x))
-  .
-    have l_in
+  · exact continuousAt_invFun_Φ hx
+  · exact hasDerivAt_Φ (invFun Φ x)
+  · exact ne_of_gt (ϕ_pos (invFun Φ x))
+  · have l_in
       : ∀ᶠ y in 𝓝 x, y ∈ Ioo 0 1
       := Ioo_mem_nhds hx.1 hx.2
     filter_upwards [l_in] with y hy
@@ -642,8 +621,7 @@ lemma continuousOn_gaussianI
   intro x hx
 
   by_cases hx0 : x = 0
-  .
-    subst x
+  · subst x
     have l_cont
       : ContinuousWithinAt 𝓘 (Ioi 0) 0
       := by
@@ -655,12 +633,11 @@ lemma continuousOn_gaussianI
     intro y hy
     change y = 0 ∨ 0 < y
     rcases eq_or_lt_of_le hy.1 with hy0 | hy0
-    . exact Or.inl hy0.symm
-    . exact Or.inr hy0
+    · exact Or.inl hy0.symm
+    · exact Or.inr hy0
 
   by_cases hx1 : x = 1
-  .
-    subst x
+  · subst x
     have l_cont
       : ContinuousWithinAt 𝓘 (Iio 1) 1
       := by
@@ -677,8 +654,8 @@ lemma continuousOn_gaussianI
     : x ∈ Ioo 0 1
     := by
     constructor
-    . exact lt_of_le_of_ne hx.1 (Ne.symm hx0)
-    . exact lt_of_le_of_ne hx.2 hx1
+    · exact lt_of_le_of_ne hx.1 (Ne.symm hx0)
+    · exact lt_of_le_of_ne hx.2 hx1
 
   exact (hasDerivAt_gaussianI l_in).continuousAt.continuousWithinAt
 
@@ -690,10 +667,9 @@ theorem strictConcaveOn_gaussianI
   : StrictConcaveOn ℝ (Icc 0 1) 𝓘
   := by
   apply strictConcaveOn_of_deriv2_neg
-  . exact convex_Icc 0 1
-  . exact Lemm.continuousOn_gaussianI
-  .
-    intro x hx
+  · exact convex_Icc 0 1
+  · exact Lemm.continuousOn_gaussianI
+  · intro x hx
     rw [interior_Icc] at hx
     change deriv (deriv 𝓘) x < 0
     exact deriv_deriv_gaussianI_neg hx
@@ -813,15 +789,12 @@ lemma convexOn_deriv_gaussianI_pow_two
   : ConvexOn ℝ (Ioo 0 1) (fun x : ℝ => (deriv 𝓘 x) ^ 2)
   := by
   apply convexOn_of_deriv2_nonneg'
-  . exact convex_Ioo 0 1
-  .
-    intro x hx
+  · exact convex_Ioo 0 1
+  · intro x hx
     exact (hasDerivAt_deriv_gaussianI_pow_two hx).differentiableAt.differentiableWithinAt
-  .
-    intro x hx
+  · intro x hx
     exact (hasDerivAt_deriv_deriv_gaussianI_pow_two hx).differentiableAt.differentiableWithinAt
-  .
-    intro x hx
+  · intro x hx
     change 0 ≤ deriv (deriv (fun y : ℝ => (deriv 𝓘 y) ^ 2)) x
     rw [(hasDerivAt_deriv_deriv_gaussianI_pow_two hx).deriv]
     positivity
@@ -893,8 +866,8 @@ lemma invFun_Φ_one_sub
     : 1 - x ∈ Ioo 0 1
     := by
     constructor
-    . linarith [hx.2]
-    . linarith [hx.1]
+    · linarith [hx.2]
+    · linarith [hx.1]
   apply strictMono_Φ.injective
   rw [Φ_invFun_id l_in, Φ_neg, Φ_invFun_id hx]
 
@@ -903,24 +876,22 @@ lemma gaussianI_one_sub
   := by
   intro x
   by_cases hx : x ∈ Ioo 0 1
-  .
-    have l_in
+  · have l_in
       : 1 - x ∈ Ioo 0 1
       := by
       constructor
-      . linarith [hx.2]
-      . linarith [hx.1]
+      · linarith [hx.2]
+      · linarith [hx.1]
     rw [gaussianI_eq l_in, gaussianI_eq hx,
       invFun_Φ_one_sub hx, ϕ_neg]
-  .
-    have l_out
+  · have l_out
       : 1 - x ∉ Ioo 0 1
       := by
       intro hy
       apply hx
       constructor
-      . linarith [hy.2]
-      . linarith [hy.1]
+      · linarith [hy.2]
+      · linarith [hy.1]
     simp only [gaussianI, ite_eq_right l_out, ite_eq_right hx]
 
 lemma deriv_gaussianI_one_sub
@@ -932,8 +903,8 @@ lemma deriv_gaussianI_one_sub
     : 1 - x ∈ Ioo 0 1
     := by
     constructor
-    . linarith [hx.2]
-    . linarith [hx.1]
+    · linarith [hx.2]
+    · linarith [hx.1]
   rw [deriv_gaussianI l_in, deriv_gaussianI hx,
     invFun_Φ_one_sub hx]
 
@@ -953,8 +924,8 @@ lemma deriv_gaussianI_pow_two_le_of_mem_Icc
     : 1 - a ∈ Ioo 0 1
     := by
     constructor
-    . linarith [ha.2]
-    . linarith [ha.1]
+    · linarith [ha.2]
+    · linarith [ha.1]
   have l_bound
     : (deriv 𝓘 b) ^ 2 ≤
         max ((deriv 𝓘 a) ^ 2) ((deriv 𝓘 (1 - a)) ^ 2)
@@ -973,8 +944,8 @@ lemma gaussianI_le_of_mem_Icc
     : 1 - a ∈ Icc 0 1
     := by
     constructor
-    . linarith [ha.2]
-    . linarith [ha.1]
+    · linarith [ha.2]
+    · linarith [ha.1]
   have l_bound
     : min (𝓘 a) (𝓘 (1 - a)) ≤ 𝓘 b
     := by
@@ -1231,26 +1202,21 @@ lemma convexOn_bobkovR
     := by
     intro y hy
     constructor
-    .
-      constructor
-      . linarith [hm.1, hy.1]
-      . linarith [hp.2, hy.2]
-    .
-      constructor
-      . linarith [hm.1, hy.2]
-      . linarith [hp.2, hy.1]
+    · constructor
+      · linarith [hm.1, hy.1]
+      · linarith [hp.2, hy.2]
+    · constructor
+      · linarith [hm.1, hy.2]
+      · linarith [hp.2, hy.1]
   apply convexOn_of_deriv2_nonneg'
-  . exact convex_Icc (-t) t
-  .
-    intro y hy
+  · exact convex_Icc (-t) t
+  · intro y hy
     have h := l_in hy
     exact (hasDerivAt_bobkovR h.1 h.2).differentiableAt.differentiableWithinAt
-  .
-    intro y hy
+  · intro y hy
     have h := l_in hy
     exact (hasDerivAt_deriv_bobkovR h.1 h.2).differentiableAt.differentiableWithinAt
-  .
-    intro y hy
+  · intro y hy
     have h := l_in hy
     change 0 ≤ deriv (deriv (bobkovR c)) y
     rw [(hasDerivAt_deriv_bobkovR h.1 h.2).deriv]
@@ -1290,14 +1256,14 @@ lemma bobkovG_sum_lower_bound
     : -x ∈ Icc (-x) x
     := by
     constructor
-    . exact le_rfl
-    . linarith
+    · exact le_rfl
+    · linarith
   have l_right
     : x ∈ Icc (-x) x
     := by
     constructor
-    . linarith
-    . exact le_rfl
+    · linarith
+    · exact le_rfl
   have l_center
     : (0 : ℝ) ∈ segment ℝ (-x) x
     := by
@@ -1412,26 +1378,21 @@ lemma concaveOn_bobkovU
     := by
     intro y hy
     constructor
-    .
-      constructor
-      . linarith [hm.1, hy.1, hy.2]
-      . linarith [hp.2, hy.2]
-    .
-      constructor
-      . linarith [hm.1, hy.2]
-      . linarith [hp.2, hy.1, hy.2]
+    · constructor
+      · linarith [hm.1, hy.1, hy.2]
+      · linarith [hp.2, hy.2]
+    · constructor
+      · linarith [hm.1, hy.2]
+      · linarith [hp.2, hy.1, hy.2]
   apply concaveOn_of_deriv2_nonpos'
-  . exact convex_Icc 0 t
-  .
-    intro y hy
+  · exact convex_Icc 0 t
+  · intro y hy
     have h := l_in hy
     exact (hasDerivAt_bobkovU h.1 h.2).differentiableAt.differentiableWithinAt
-  .
-    intro y hy
+  · intro y hy
     have h := l_in hy
     exact (hasDerivAt_deriv_bobkovU h.1 h.2).differentiableAt.differentiableWithinAt
-  .
-    intro y hy
+  · intro y hy
     have h := l_in hy
     change deriv (deriv (bobkovU c)) y ≤ 0
     rw [(hasDerivAt_deriv_bobkovU h.1 h.2).deriv]
@@ -1439,8 +1400,8 @@ lemma concaveOn_bobkovU
       : c + y ∈ Icc (c - y) (1 - (c - y))
       := by
       constructor
-      . linarith [hy.1]
-      . linarith [hc]
+      · linarith [hy.1]
+      · linarith [hc]
     have l_compare :=
       deriv_gaussianI_pow_two_le_of_mem_Icc h.2 l_segment
     linarith
@@ -1453,8 +1414,7 @@ lemma bobkovU_upper_bound
   := by
   intro c x hx hc hp hm
   by_cases hx0 : x = 0
-  .
-    subst x
+  · subst x
     simp [bobkovU]
 
   have l_positive : 0 < x
@@ -1462,8 +1422,8 @@ lemma bobkovU_upper_bound
 
   have l_center : c ∈ Ioo 0 1 := by
     constructor
-    . linarith [hm.1]
-    . linarith [hp.2]
+    · linarith [hm.1]
+    · linarith [hp.2]
 
   have l_plus_zero : c + 0 ∈ Ioo 0 1 := by
     simpa only [add_zero] using l_center
@@ -1517,8 +1477,8 @@ lemma bobkovU_nonneg
   have l_segment
     : c + x ∈ Icc (c - x) (1 - (c - x)) := by
     constructor
-    . linarith [hx]
-    . linarith [hc]
+    · linarith [hx]
+    · linarith [hc]
 
   have l_compare : 𝓘 (c - x) ≤ 𝓘 (c + x) := by
     exact gaussianI_le_of_mem_Icc l_left l_segment
@@ -1649,8 +1609,8 @@ lemma bobkov_two_point_centered
 
   have l_center : c ∈ Ioo 0 1 := by
     constructor
-    . linarith [hm.1]
-    . linarith [hp.2]
+    · linarith [hm.1]
+    · linarith [hp.2]
 
   have l_nonneg : 0 ≤ 𝓘 c := by
     exact le_of_lt (gaussianI_pos l_center)
@@ -1682,14 +1642,8 @@ lemma bobkov_two_point_centered
 
   simpa only [bobkovG, neg_sq, ← sub_eq_add_neg] using l_result
 
-lemma bobkov_two_point_interior
-  : {a b : ℝ} → a ∈ Ioo 0 1 → b ∈ Ioo 0 1
-    → 2 * 𝓘 ((a + b) / 2) ≤
-        √((𝓘 a) ^ 2 + ((a - b) / 2) ^ 2) +
-        √((𝓘 b) ^ 2 + ((a - b) / 2) ^ 2)
-  := by
-  intro a b ha hb
-
+lemma bobkov_two_point_interior {a b : ℝ} (ha: a ∈ Ioo 0 1) (hb: b ∈ Ioo 0 1):
+  2 * 𝓘 ((a + b) / 2) ≤ √((𝓘 a) ^ 2 + ((a - b) / 2) ^ 2) + √((𝓘 b) ^ 2 + ((a - b) / 2) ^ 2) := by
   have l_ordered
     : {u v : ℝ} → u ∈ Ioo 0 1 → v ∈ Ioo 0 1 → u ≤ v
       → 2 * 𝓘 ((u + v) / 2) ≤
@@ -1721,14 +1675,12 @@ lemma bobkov_two_point_interior
           √((𝓘 (c + x)) ^ 2 + x ^ 2) +
           √((𝓘 (c - x)) ^ 2 + x ^ 2) := by
       by_cases hc : c ≤ 1 / 2
-      .
-        apply bobkov_two_point_centered l_x hc
-        . rw [l_plus]
+      · apply bobkov_two_point_centered l_x hc
+        · rw [l_plus]
           exact hv
-        . rw [l_minus]
+        · rw [l_minus]
           exact hu
-      .
-        have l_half : 1 - c ≤ 1 / 2 := by
+      · have l_half : 1 - c ≤ 1 / 2 := by
           linarith
 
         have l_reflected_plus : 1 - c + x = 1 - u := by
@@ -1740,14 +1692,14 @@ lemma bobkov_two_point_interior
         have l_reflected_plus_in : 1 - c + x ∈ Ioo 0 1 := by
           rw [l_reflected_plus]
           constructor
-          . linarith [hu.2]
-          . linarith [hu.1]
+          · linarith [hu.2]
+          · linarith [hu.1]
 
         have l_reflected_minus_in : 1 - c - x ∈ Ioo 0 1 := by
           rw [l_reflected_minus]
           constructor
-          . linarith [hv.2]
-          . linarith [hv.1]
+          · linarith [hv.2]
+          · linarith [hv.1]
 
         have l_reflected_bound :=
           bobkov_two_point_centered
@@ -1764,9 +1716,8 @@ lemma bobkov_two_point_interior
     linarith only [l_bound]
 
   rcases le_total a b with hab | hba
-  . exact l_ordered ha hb hab
-  .
-    have l_swapped := l_ordered hb ha hba
+  · exact l_ordered ha hb hab
+  · have l_swapped := l_ordered hb ha hba
 
     have l_center : (b + a) / 2 = (a + b) / 2 := by
       ring
@@ -1799,14 +1750,8 @@ lemma tendsto_gaussianI_of_tendsto
 end Lemm
 
 /-- Bobkov's classical two-point inequality for the Gaussian isoperimetric profile. -/
-theorem bobkov_two_point
-  {a b : ℝ}
-  (ha : a ∈ Icc 0 1)
-  (hb : b ∈ Icc 0 1)
-  : 2 * 𝓘 ((a + b) / 2) ≤
-      √((𝓘 a) ^ 2 + ((a - b) / 2) ^ 2) +
-      √((𝓘 b) ^ 2 + ((a - b) / 2) ^ 2)
-  := by
+theorem bobkov_two_point {a b : ℝ} (ha : a ∈ Icc 0 1) (hb : b ∈ Icc 0 1) :
+  2 * 𝓘 ((a + b) / 2) ≤ √((𝓘 a) ^ 2 + ((a - b) / 2) ^ 2) + √((𝓘 b) ^ 2 + ((a - b) / 2) ^ 2) := by
   let f : ℝ → ℝ → ℝ :=
     fun u ε => (u + ε) / (1 + 2 * ε)
 
@@ -1818,12 +1763,10 @@ theorem bobkov_two_point
       linarith
     dsimp [f]
     constructor
-    .
-      apply div_pos
-      . linarith [hu.1]
-      . exact l_den_pos
-    .
-      apply (div_lt_iff₀ l_den_pos).mpr
+    · apply div_pos
+      · linarith [hu.1]
+      · exact l_den_pos
+    · apply (div_lt_iff₀ l_den_pos).mpr
       linarith [hu.2]
 
   have l_eps
@@ -1871,8 +1814,8 @@ theorem bobkov_two_point
 
   have l_mid : (a + b) / 2 ∈ Icc 0 1 := by
     constructor
-    . linarith [ha.1, hb.1]
-    . linarith [ha.2, hb.2]
+    · linarith [ha.1, hb.1]
+    · linarith [ha.2, hb.2]
 
   have l_mid_eq
     : (ε : ℝ) →
