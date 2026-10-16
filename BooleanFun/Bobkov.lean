@@ -147,9 +147,7 @@ lemma tendsto_Φ_atTop
 end Lemm
 
 /-- The range of the Gaussian CDF is the open interval `(0, 1)`. -/
-theorem range_Φ
-  : range Φ = Ioo 0 1
-  := by
+theorem range_Φ : range Φ = Ioo 0 1 := by
   apply Set.ext
   intro x
   change (∃ i : ℝ, Φ i = x) ↔ (0 < x ∧ x < 1)
@@ -365,16 +363,12 @@ def gaussianI (x : ℝ) := if x ∈ Ioo 0 1 then (ϕ ∘ invFun Φ) x else 0
 scoped notation "𝓘" => gaussianI
 
 @[simp]
-theorem gaussianI_zero
-  : 𝓘 0 = 0
-  := by
+theorem gaussianI_zero : 𝓘 0 = 0 := by
   simp [gaussianI]
   -- 0 is out of range (def)
 
 @[simp]
-theorem gaussianI_one
-  : 𝓘 1 = 0
-  := by
+theorem gaussianI_one : 𝓘 1 = 0 := by
   simp [gaussianI]
   -- 1 is out of range (def)
 
@@ -393,12 +387,10 @@ end Lemm
 -- In this section we compute derivatives of `I` on `(0, 1)`.
 section gaussianI_derivatives
 
+variable {x : ℝ}
+
 /-- The Gaussian isoperimetric profile is differentiable on `(0, 1)` -/
--- original: theorem hasDerivAt_gaussianI (hx : x ∈ Ioo 0 1) : HasDerivAt 𝓘 (-invFun Φ x) x
-theorem hasDerivAt_gaussianI
-  : {x : ℝ} → x ∈ Ioo 0 1 → HasDerivAt 𝓘 (-invFun Φ x) x
-  := by
-  intro x hx
+theorem hasDerivAt_gaussianI (hx : x ∈ Ioo 0 1) : HasDerivAt 𝓘 (-invFun Φ x) x := by
   have l_comp
     : HasDerivAt
         (ϕ ∘ invFun Φ)
@@ -418,29 +410,16 @@ theorem hasDerivAt_gaussianI
   rw [ite_eq_left hy]
 
 /-- The Gaussian isoperimetric profile's derivative.  -/
--- original: theorem deriv_gaussianI (hx : x ∈ Ioo 0 1) : deriv 𝓘 x = -invFun Φ x
-theorem deriv_gaussianI
-  : {x : ℝ} → x ∈ Ioo 0 1 → deriv 𝓘 x = -invFun Φ x
-  := by
-  intro x hx
+theorem deriv_gaussianI (hx : x ∈ Ioo 0 1) : deriv 𝓘 x = -invFun Φ x := by
   exact (hasDerivAt_gaussianI hx).deriv
 
 /-- The Gaussian isoperimetric profile is positive on `(0, 1)`. -/
--- original : theorem gaussianI_pos (hx : x ∈ Ioo 0 1) : 0 < 𝓘 x
-theorem gaussianI_pos
-  : {x : ℝ} → (hx : x ∈ Ioo 0 1) → 0 < 𝓘 x
-  := by
-  intro x hx
+theorem gaussianI_pos (hx : x ∈ Ioo 0 1) : 0 < 𝓘 x := by
   rw [Lemm.gaussianI_eq hx]
   exact Lemm.ϕ_pos (invFun Φ x)
 
 /-- The derivative of the Gaussian isoperimetric profile is also differentiable on `(0, 1)`. -/
--- original: theorem hasDerivAt_deriv_gaussianI (hx : x ∈ Ioo 0 1) : HasDerivAt (deriv 𝓘) (-(𝓘 x)⁻¹) x
-theorem hasDerivAt_deriv_gaussianI
-  : {x : ℝ} → x ∈ Ioo 0 1
-    → HasDerivAt (deriv 𝓘) (-(𝓘 x)⁻¹) x
-  := by
-  intro x hx
+theorem hasDerivAt_deriv_gaussianI (hx : x ∈ Ioo 0 1) : HasDerivAt (deriv 𝓘) (-(𝓘 x)⁻¹) x := by
   have l_neg
     : HasDerivAt
         (fun y => -invFun Φ y)
@@ -457,19 +436,12 @@ theorem hasDerivAt_deriv_gaussianI
   exact deriv_gaussianI hy
 
 /-- The second derivative of the Gaussian isoperimetric profile -/
--- original: theorem deriv_deriv_gaussianI (hx : x ∈ Ioo 0 1) : deriv (deriv 𝓘) x = -(𝓘 x)⁻¹
-theorem deriv_deriv_gaussianI
-  : {x : ℝ} → x ∈ Ioo 0 1 → deriv (deriv 𝓘) x = -(𝓘 x)⁻¹
-  := by
-  intro x hx
+theorem deriv_deriv_gaussianI (hx : x ∈ Ioo 0 1) : deriv (deriv 𝓘) x = -(𝓘 x)⁻¹ := by
   exact (hasDerivAt_deriv_gaussianI hx).deriv
 
 /-- The second derivative of the Gaussian isoperimetric profile is negative on `(0, 1)`. -/
 -- original: theorem deriv_deriv_gaussianI_neg (hx : x ∈ Ioo 0 1) : deriv (deriv 𝓘) x < 0
-theorem deriv_deriv_gaussianI_neg
-  : {x : ℝ} → x ∈ Ioo 0 1 → deriv (deriv 𝓘) x < 0
-  := by
-  intro x hx
+theorem deriv_deriv_gaussianI_neg (hx : x ∈ Ioo 0 1) : deriv (deriv 𝓘) x < 0 := by
   rw [deriv_deriv_gaussianI hx]
   apply neg_lt_zero.mpr
   apply inv_pos.mpr
@@ -663,9 +635,7 @@ end Lemm
 
 /-- The Gaussian isoperimetric profile is strictly concave on `[0, 1]`. -/
 -- bobkov lemma 2.b
-theorem strictConcaveOn_gaussianI
-  : StrictConcaveOn ℝ (Icc 0 1) 𝓘
-  := by
+theorem strictConcaveOn_gaussianI : StrictConcaveOn ℝ (Icc 0 1) 𝓘 := by
   apply strictConcaveOn_of_deriv2_neg
   · exact convex_Icc 0 1
   · exact Lemm.continuousOn_gaussianI
@@ -675,18 +645,12 @@ theorem strictConcaveOn_gaussianI
     exact deriv_deriv_gaussianI_neg hx
 
 /-- Differential equation satisfied by the Gaussian isoperimetric profile. -/
--- original: theorem gaussianI_mul_deriv_deriv_eq (hx : x ∈ Ioo 0 1) : 𝓘 x * deriv (deriv 𝓘) x = -1
-theorem gaussianI_mul_deriv_deriv_eq
-  : {x : ℝ} → x ∈ Ioo 0 1 → 𝓘 x * deriv (deriv 𝓘) x = -1
-  := by
-  intro x hx
+theorem gaussianI_mul_deriv_deriv_eq (hx : x ∈ Ioo 0 1) : 𝓘 x * deriv (deriv 𝓘) x = -1 := by
   rw [deriv_deriv_gaussianI hx]
   rw [mul_neg, mul_inv_cancel₀ (ne_of_gt (gaussianI_pos hx))]
 
 /-- The limit of `I' x` tends to `∞` as `x → 0+`. -/
-theorem tendsto_deriv_gaussianI_zero
-  : Tendsto (deriv 𝓘) (𝓝[>] 0) atTop
-  := by
+theorem tendsto_deriv_gaussianI_zero : Tendsto (deriv 𝓘) (𝓝[>] 0) atTop := by
   have l_neg
     : Tendsto (fun x => -invFun Φ x) (𝓝[>] 0) atTop
     := by
@@ -699,9 +663,7 @@ theorem tendsto_deriv_gaussianI_zero
   exact (deriv_gaussianI hx).symm
 
 /-- The limit of `I' x` tends to `-∞` as `x → 1-`. -/
-theorem tendsto_deriv_gaussianI_one
-  : Tendsto (deriv 𝓘) (𝓝[<] 1) atBot
-  := by
+theorem tendsto_deriv_gaussianI_one : Tendsto (deriv 𝓘) (𝓝[<] 1) atBot := by
   -- same
   have l_neg
     : Tendsto (fun x => -invFun Φ x) (𝓝[<] 1) atBot
